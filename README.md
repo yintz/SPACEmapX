@@ -24,8 +24,11 @@ install.packages("remotes")
 remotes::install_github("yintz/SThelper")
 ```
 
-
-
+## Functions
+``` r
+ShowTwig(TrigID)
+ShowTwigSectionName(TrigID)
+```
 
 
 
