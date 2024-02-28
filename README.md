@@ -8,7 +8,7 @@
 [![](https://img.shields.io/badge/SThelper-version0.99-blue.svg)](https://github.com/yintz/SThelper/releases)[![](https://img.shields.io/github/last-commit/yintz/SThelper.svg)](https://github.com/yintz/SThelper/commits/main)
 
 # SThelper
-This package provides some ST analysis helper functionsfor spatial transcriptomics analysis on Copy number variation. 
+This package provides some ST analysis helper functions for spatial transcriptomics analysis on Copy number variation. 
 
 I aim to updated every month.
 
