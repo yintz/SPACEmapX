@@ -17,6 +17,16 @@ if there is anything you need, please feel free to contact me
 
 this package is based on InferCNV, SpatialInferCNV package. SThealper is designed as a helper package for it.
 
+
+#### Software Requirements
+JAGS
+R libraries required include: 
+graphics, grDevices, RColorBrewer, gplots, futile.logger, stats, utils, methods, ape, Matrix, fastcluster, dplyr, HiddenMarkov, ggplot2, edgeR, coin, caTools, digest, reshape, rjags, fitdistrplus, future, foreach, doParallel, BiocGenerics, SummarizedExperiment, SingleCellExperiment, tidyr, parallel, coda, gridExtra, argparse
+
+
+
+
+
 ## Installation
 package can be installed through GitHub using;
 ``` r
