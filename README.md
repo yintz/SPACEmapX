@@ -9,9 +9,11 @@
 
 
 # SPACEmapX
-This package provides analysis  for spatial transcriptomics analysis on Copy number variation of lethal clone X. 
+This package provides guidance for analysis of spatially resolved tissue (Visium ST), focusing on clonal dynamics derived from infer copy number status.
 
-if there is anything you need, please feel free to contact me.
+our perticular goal has been identification of the "lethal clone", defined as that which metasises from primary cancer tissue to lymph nodes. however, this package can be used for any analysis of clonal evolution and/or somatic mosaicism in heterogeneous tissue.  
+
+if there is anything you need, please feel free to contact us.
 ## Pre-requirement
 
 This package is based on InferCNV, SpatialInferCNV package. SPACEmapX is designed as a helper package for it.
