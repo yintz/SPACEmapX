@@ -7,7 +7,7 @@
 
 [![](https://img.shields.io/badge/SThelper-version0.99-blue.svg)](https://github.com/yintz/SThelper/releases)[![](https://img.shields.io/github/last-commit/yintz/SThelper.svg)](https://github.com/yintz/SThelper/commits/main)
 
-# SThelper
+# SPACEmapX
 This package provides some ST analysis helper functions for spatial transcriptomics analysis on Copy number variation. 
 
 I aim to updated every month.
@@ -31,7 +31,7 @@ graphics, grDevices, RColorBrewer, gplots, futile.logger, stats, utils, methods,
 package can be installed through GitHub using;
 ``` r
 install.packages("remotes")
-remotes::install_github("yintz/SThelper")
+remotes::install_github("yintz/SPACEmapX")
 ```
 
 ## Functions
