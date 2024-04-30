@@ -43,7 +43,7 @@ ShowTwigSectionName(TrigID)
 
 
 
-`SThelper` is an R package that collects useful tools for Spatially Resolved Transcriptomics data analysis and visualization.
+`SpaceMapX` is an R package that collects useful tools for Spatially Resolved Transcriptomics data analysis and visualization.
 
 
 # 10x ST Data
