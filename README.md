@@ -8,14 +8,12 @@
 [![](https://img.shields.io/badge/SThelper-version0.99-blue.svg)](https://github.com/yintz/SThelper/releases)[![](https://img.shields.io/github/last-commit/yintz/SThelper.svg)](https://github.com/yintz/SThelper/commits/main)
 
 # SPACEmapX
-This package provides some ST analysis helper functions for spatial transcriptomics analysis on Copy number variation. 
+This package provides analysis  for spatial transcriptomics analysis on Copy number variation of lethal clone X. 
 
-I aim to updated every month.
-
-if there is anything you need, please feel free to contact me
+if there is anything you need, please feel free to contact me.
 ## Pre-requirement
 
-this package is based on InferCNV, SpatialInferCNV package. SThealper is designed as a helper package for it.
+This package is based on InferCNV, SpatialInferCNV package. SPACEmapX is designed as a helper package for it.
 
 
 #### Software Requirements
