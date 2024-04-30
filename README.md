@@ -7,6 +7,10 @@
 
 [![](https://img.shields.io/badge/SThelper-version0.99-blue.svg)](https://github.com/yintz/SThelper/releases)[![](https://img.shields.io/github/last-commit/yintz/SThelper.svg)](https://github.com/yintz/SThelper/commits/main)
 
+
+[![](https://img.shields.io/badge/SPACEmapX-version0.99-blue.svg)](https://github.com/yintz/SPACEmapX/releases)[![](https://img.shields.io/github/last-commit/yintz/SPACEmapX.svg)](https://github.com/yintz/SPACEmapX/commits/main)
+
+
 # SPACEmapX
 This package provides analysis  for spatial transcriptomics analysis on Copy number variation of lethal clone X. 
 
