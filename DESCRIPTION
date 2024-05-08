@@ -1,9 +1,18 @@
 Package: SPACEmapX
 Type: Package
-Title：Spatially (Visium ST), analyse clonal dynamics derived from infer copy number status.
+Title: Spatially (Visium ST), analyse clonal dynamics derived from infer copy number status.
 Version: 0.1.0
-Author: Wencheng Yin, Alastair Lamb
-Maintainer: The package maintainer <wencheng.yin@nds.ox.ac.uk>
+Date: 2024-05-01
+Authors@R: c( person("Wencheng", "Yin", email = "wencheng.yin@nds.ox.ac.uk", role = "aut"), person("Alastair", "Lamb", email = "alastair.lamb@nds.ox.ac.uk", role = "aut")) 
+BugReports: https://github.com/yintz/SPACEmapX/issues
+biocViews: Software, CopyNumberVariation, VariantDetection, GenomicVariation, Genetics, Transcriptomics
+Depends: R(>= 4.0)
+LazyData: TRUE
+VignetteBuilder: knitr
+Suggests: BiocStyle, knitr, rmarkdown, testthat
+SystemRequirements: JAGS 4.x.y
+Imports: graphics, grDevices, RColorBrewer, gplots, futile.logger, stats, utils, methods, ape, phyclust, Matrix, fastcluster, parallelDist, dplyr, HiddenMarkov, ggplot2, edgeR, coin, caTools, digest, RANN, igraph, reshape2, rjags, fitdistrplus, future, foreach, doParallel, Seurat, BiocGenerics, SummarizedExperiment, SingleCellExperiment, tidyr, parallel, coda, gridExtra, argparse
+URL: https://github.com/yintz/SPACEmapX/wiki
 Description: This package provides guidance for analysis of spatially resolved tissue (Visium ST), focusing on clonal dynamics derived from infer copy number status.
 License: GNU GPLv3
 Encoding: UTF-8
