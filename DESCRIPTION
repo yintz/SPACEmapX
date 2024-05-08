@@ -3,7 +3,7 @@ Type: Package
 Title: Spatially (Visium ST), analyse clonal dynamics derived from infer copy number status.
 Version: 0.1.0
 Date: 2024-05-01
-Authors@R: c( person("Wencheng", "Yin", email = "wencheng.yin@nds.ox.ac.uk", role = "aut"), person("Alastair", "Lamb", email = "alastair.lamb@nds.ox.ac.uk", role = "aut")) 
+Authors@R: c( person("Wencheng", "Yin", email = "yintz@msn.com", role = "aut"), person("Alastair", "Lamb", email = "alastair.lamb@nds.ox.ac.uk", role = "aut")) 
 BugReports: https://github.com/yintz/SPACEmapX/issues
 biocViews: Software, CopyNumberVariation, VariantDetection, GenomicVariation, Genetics, Transcriptomics
 Depends: R(>= 4.0)
