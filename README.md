@@ -14,8 +14,17 @@ This package provides guidance for analysis of spatially resolved tissue (Visium
 Our particular goal has been identification of the "lethal clone", defined as that which metasises from primary cancer tissue to lymph nodes. however, this package can be used for any analysis of clonal evolution and/or somatic mosaicism in heterogeneous tissue.  
 
 If there is anything you need to assist with running this package, please feel free to contact us via GitHub "issue" messaging
-## Pre-requirement
 
+## Functions
+
+This packages contains 4 major functions.
+1 Infer Copy Number Variation based on transcriptomics data.
+2 Spatial data wrapper
+3 Heatmap Plots
+4 Dendrogram selector
+
+
+## Pre-requirement
 This package is based on InferCNV. SPACEmapX is designed as a helper package for it.
 
 
