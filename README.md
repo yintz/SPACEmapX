@@ -45,7 +45,7 @@ install.packages("remotes")
 remotes::install_github("yintz/SPACEmapX")
 ```
 
-## Functions
+## Functions introduction 
 ``` r
 ShowTwig(TrigID)
 ShowTwigSectionName(TrigID)
