@@ -17,11 +17,11 @@ If there is anything you need to assist with running this package, please feel f
 
 ## Functions
 
-This packages contains 4 major functions.
-1 Infer Copy Number Variation based on transcriptomics data.
-2 Spatial data wrapper
-3 Heatmap Plots
-4 Dendrogram selector
+This packages contains 4 major functions.  
+1 Infer Copy Number Variation based on transcriptomics data.  
+2 Spatial data wrapper.  
+3 Heatmap Plots.  
+4 Dendrogram selector.  
 
 
 ## Pre-requirement
