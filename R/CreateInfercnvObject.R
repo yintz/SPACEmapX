@@ -81,6 +81,18 @@
 
 
 
+
+C_CHR <- "chr"
+C_START <- "start"
+C_STOP <- "stop"
+C_HCLUST_METHODS <- c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")
+C_OUTPUT_FORMAT <- c("pdf", "png")
+
+
+
+
+
+
 SPACEmapX <- methods::setClass(
                          "SPACEmapX",
                          slots = c(
@@ -285,13 +297,13 @@ CreateInfercnvObject <- function(raw_counts_matrix,
     }
 
     if ((2*ncol(raw.data)) >=  10^getOption("scipen")) {
-        flog.warn(paste0("Please use \"options(scipen = 100)\" before running infercnv ",
+        flog.warn(paste0("Please use \"options(scipen = 100)\" before running SPACEmapX ",
                          "if you are using the analysis_mode=\"subclusters\" option or ",
                          "you may encounter an error while the hclust is being generated."))
     }
     
     object <- new(
-        Class = "infercnv",
+        Class = "SPACEmapX",
         expr.data = raw.data, 
         count.data = raw.data,
         gene_order = input_gene_order,
@@ -304,7 +316,7 @@ CreateInfercnvObject <- function(raw_counts_matrix,
                        "counts_md5" = digest(raw.data)),
         .hspike = NULL)
 
-    validate_infercnv_obj(object)
+    validate_SPACEmapX_obj(object)
     
     return(object)
 }
