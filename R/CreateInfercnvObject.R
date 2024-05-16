@@ -81,6 +81,18 @@
 
 
 
+SPACEmapX <- methods::setClass(
+                         "SPACEmapX",
+                         slots = c(
+                             expr.data = "ANY",
+                             count.data = "ANY",
+                             gene_order= "data.frame",
+                             reference_grouped_cell_indices = "list",
+                             observation_grouped_cell_indices = "list",
+                             tumor_subclusters  = "ANY",
+                             options = "list",
+                             .hspike = "ANY") )
+
 
 
 
