@@ -15,7 +15,7 @@
 
 
 
-.order_reduce <- function(data, genomic_position){
+order_reduce <- function(data, genomic_position){
     flog.info(paste("::order_reduce:Start.", sep=""))
     ret_results <- list(expr=NULL, order=NULL, chr_order=NULL)
     if (is.null(data) || is.null(genomic_position)){
@@ -57,10 +57,10 @@
     
     ## ensure expr and order match up!
     if (isTRUE(all.equal(rownames(ret_results$expr), rownames(ret_results$order)))) {
-        flog.info(".order_reduce(): expr and order match.")
+        flog.info("order_reduce(): expr and order match.")
     }
     else {
-        stop("Error, .order_reduce(): expr and order don't match! must debug")
+        stop("Error, order_reduce(): expr and order don't match! must debug")
     }
         
     # Set the chr to factor so the order can be arbitrarily set and sorted.
