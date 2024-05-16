@@ -170,7 +170,7 @@ CreateInfercnvObject <- function(raw_counts_matrix,
     }
 
     ## extract the genes indicated in the gene ordering file:
-    order_ret <- .order_reduce(data=raw.data, genomic_position=gene_order)
+    order_ret <- order_reduce(data=raw.data, genomic_position=gene_order)
 
     num_genes_removed = dim(raw.data)[1] - dim(order_ret$exp)[1]
 
