@@ -1,4 +1,93 @@
 
+#' @title CreateInfercnvObject
+#'
+#' @param raw_counts_matrix  the matrix of genes (rows) vs. cells (columns) containing the raw counts
+#'                           If a filename is given, it'll be read via read.table()
+#'                           otherwise, if matrix or Matrix, will use the data directly.
+#' 
+#' @param gene_order_file data file containing the positions of each gene along each chromosome in the genome.
+#'
+#' @param annotations_file a description of the cells, indicating the cell type classifications
+#'
+#' @param ref_group_names a vector containing the classifications of the reference (normal) cells to use for infering cnv
+#'
+#' @param delim delimiter used in the input files
+#'
+#' @param max_cells_per_group maximun number of cells to use per group. Default=NULL, using all cells defined in the annotations_file. This option is useful for randomly subsetting the existing data for a quicker preview run, such as using 50 cells per group instead of hundreds.
+#' 
+#' @param min_max_counts_per_cell minimum and maximum counts allowed per cell. Any cells outside this range will be removed from the counts matrix. default=(100, +Inf) and uses all cells. If used, should be set as c(min_counts, max_counts)
+#'
+#' @param chr_exclude list of chromosomes in the reference genome annotations that should be excluded from analysis.  Default = c('chrX', 'chrY', 'chrM')
+#'
+#' @description Creation of an infercnv object. This requires the following inputs:
+#' A more detailed description of each input is provided below:
+#'
+#' The raw_counts_matrix:
+#'
+#'           MGH54_P16_F12 MGH53_P5_C12 MGH54_P12_C10 MGH54_P16_F02 MGH54_P11_C11  ...
+#' DDX11L1     0.0000000     0.000000      0.000000      0.000000     0.0000000
+#' WASH7P      0.0000000     2.231939      7.186235      5.284944     0.9650009
+#' FAM138A     0.1709991     0.000000      0.000000      0.000000     0.0000000
+#' OR4F5       0.0000000     0.000000      0.000000      0.000000     0.0000000
+#' OR4F29      0.0000000     0.000000      0.000000      0.000000     0.0000000
+#' ...
+#'
+#' The gene_order_file, contains chromosome, start, and stop position for each gene, tab-delimited:
+#'
+#'          chr  start   stop
+#' DDX11L1 chr1  11869  14412
+#' WASH7P  chr1  14363  29806
+#' FAM138A chr1  34554  36081
+#' OR4F5   chr1  69091  70008
+#' OR4F29  chr1 367640 368634
+#' OR4F16  chr1 621059 622053
+#' ...
+#' 
+#' The annotations_file, containing the cell name and the cell type classification, tab-delimited.
+#'
+#'             V1                   V2
+#' 1 MGH54_P2_C12 Microglia/Macrophage
+#' 2 MGH36_P6_F03 Microglia/Macrophage
+#' 3 MGH53_P4_H08 Microglia/Macrophage
+#' 4 MGH53_P2_E09 Microglia/Macrophage
+#' 5 MGH36_P5_E12 Oligodendrocytes (non-malignant)
+#' 6 MGH54_P2_H07 Oligodendrocytes (non-malignant)
+#' ...
+#' 179  93_P9_H03 malignant
+#' 180 93_P10_D04 malignant
+#' 181  93_P8_G09 malignant
+#' 182 93_P10_B10 malignant
+#' 183  93_P9_C07 malignant
+#' 184  93_P8_A12 malignant
+#' ...
+#'
+#'
+#' and the ref_group_names vector might look like so:  c("Microglia/Macrophage","Oligodendrocytes (non-malignant)")
+#'
+#' @return infercnv
+#'
+#' @export
+#'
+#' @examples
+#' data(infercnv_data_example)
+#' data(infercnv_annots_example)
+#' data(infercnv_genes_example)
+#'
+#' infercnv_object_example <- infercnv::CreateInfercnvObject(raw_counts_matrix=infercnv_data_example, 
+#'                                                gene_order_file=infercnv_genes_example,
+#'                                                annotations_file=infercnv_annots_example,
+#'                                                ref_group_names=c("normal"))
+#'
+
+
+
+
+
+
+
+
+
+
 CreateInfercnvObject <- function(raw_counts_matrix,
                                  gene_order_file,
                                  annotations_file,
