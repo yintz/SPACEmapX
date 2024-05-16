@@ -1,3 +1,20 @@
+
+# Order the data and subset the data to data in the genomic position file.
+#
+# Args:
+# @param data Data (expression) matrix where the row names should be in
+#                 the row names of the genomic_position file.
+# @param genomic_position Data frame read in from the genomic position file
+#
+# @return Returns a matrix of expression in the order of the
+#            genomic_position file. NULL is returned if the genes in both
+#            data parameters do not match.
+#
+
+
+
+
+
 .order_reduce <- function(data, genomic_position){
     flog.info(paste("::order_reduce:Start.", sep=""))
     ret_results <- list(expr=NULL, order=NULL, chr_order=NULL)
