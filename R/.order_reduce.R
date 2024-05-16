@@ -1,4 +1,3 @@
-
 .order_reduce <- function(data, genomic_position){
     flog.info(paste("::order_reduce:Start.", sep=""))
     ret_results <- list(expr=NULL, order=NULL, chr_order=NULL)
