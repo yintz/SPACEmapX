@@ -8,12 +8,12 @@
 [![](https://img.shields.io/badge/SPACEmapX-version0.99-blue.svg)](https://github.com/yintz/SPACEmapX/releases)[![](https://img.shields.io/github/last-commit/yintz/SPACEmapX.svg)](https://github.com/yintz/SPACEmapX/commits/main)
 
 
-# SPACEMapX
+# SPACEMapX - Spatial Phylogenetics And Clonal Evolution: MAPping the lethal clone (X)
 This package provides guidance for analysis of spatially resolved tissue (Visium ST), focusing on clonal dynamics derived from infer copy number status.
 
 Our particular goal has been identification of the "lethal clone", defined as that which metasises from primary cancer tissue to lymph nodes. however, this package can be used for any analysis of clonal evolution and/or somatic mosaicism in heterogeneous tissue.  
 
-If there is anything you need to assist with running this package, please feel free to contact us via GitHub "issue" messaging
+If you need any assistance with running this package, please feel free to contact us via GitHub "issue" messaging
 
 ## Functions
 
@@ -25,7 +25,7 @@ This packages contains 4 major functions.
 
 
 ## Pre-requirement
-This package is based on InferCNV. SPACEmapX is designed as a helper package for it.
+This package is based on InferCNV & SpatialInferCNV. SPACEmapX is designed as a helper package for these.
 
 
 #### Software Requirements
