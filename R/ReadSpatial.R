@@ -28,6 +28,8 @@ ReadSpatial <- function(file_path) {
     NumberCheck<-1
     while (NumberCheck<=num_samples){
       ENSBMLID_Counts[[NumberCheck]]<-ImportCountData(samples_data$samplesID[NumberCheck,1], samples_data$GeneFile[NumberCheck,2])
+      Histology[[NumberCheck]] <- ImportHistologicalAnnotations(samples_data$samplesID[NumberCheck,1], samples_data$GeneFile[NumberCheck,3])
+      TissueType[[NumberCheck]] <- read_csv(samples_data$samplesID[NumberCheck,1], samples_data$GeneFile[NumberCheck,4])
       NumberCheck<-NumberCheck+1
   }
   
