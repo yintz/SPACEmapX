@@ -7,7 +7,7 @@ ReadSpatial <- function(file_path) {
   samples_data <- read_csv(file_path)
   
   # Check if required columns are present
-  required_columns <- c("samplesID", "expressionLocation", "annotation", "type")
+  required_columns <- c("samplesID", "GeneFile", "annotation", "type")
   missing_columns <- setdiff(required_columns, colnames(samples_data))
   
   if (length(missing_columns) > 0) {
@@ -27,8 +27,7 @@ ReadSpatial <- function(file_path) {
   if (num_samples > 1) {
     NumberCheck<-1
     while (NumberCheck<=num_samples){
-      ENSBMLID_Counts[[NumberCheck]]<-ImportCountData("A2", "/Users/wenchengyin/Desktop/Pt13/A2/filtered_feature_bc_matrix.h5")
-      
+      ENSBMLID_Counts[[NumberCheck]]<-ImportCountData(samples_data$samplesID[NumberCheck,1], samples_data$GeneFile[NumberCheck,2])
       NumberCheck<-NumberCheck+1
   }
   
