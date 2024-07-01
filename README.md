@@ -47,6 +47,7 @@ remotes::install_github("yintz/SPACEmapX")
 
 ## Functions introduction 
 ``` r
+ShowTwigSpotsList(TwigID1,TwigID2,TwigID3,...)
 ShowTwig(TrigID)
 ShowTwigSectionName(TrigID)
 ```
