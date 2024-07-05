@@ -1,9 +1,9 @@
-#' Selecting Subtree Data for Node Selection: this selects a number of barcoded spots from a inferCNV dendrogram object for further analysis.
+#' Selecting Subtree Data for Twig Selection: this selects a number of barcoded spots from a inferCNV dendrogram object for further analysis.
 #'
 #' SelectingSubTreeData()
 #' 
 #' @param SubtreeObject A dendrogram, phylo object created by subtrees(as.phylo([dendogram.txt]))
-#' @param NodeOfInterest A numerical integer corresponding to a phylogram/dendogram node of interest
+#' @param TwigOfInterest A numerical integer corresponding to a phylogram/dendogram twig of interest
 #' @return A specific subtree twig
 #' @examples
 #' SelectingSubTreeData(my.subtrees, 4617)
