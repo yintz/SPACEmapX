@@ -4,16 +4,16 @@
 #' 
 #' @param SubtreeObject A dendrogram, phylo object created by subtrees(as.phylo([dendogram.txt]))
 #' @param NodeOfInterest A numerical integer corresponding to a phylogram/dendogram node of interest
-#' @return A specific subtree node
+#' @return A specific subtree twig
 #' @examples
 #' SelectingSubTreeData(my.subtrees, 4617)
 
-SelectingSubTreeData <- function(SubtreeObject, NodeOfInterest) {
-  tree_node <- SubtreeObject[[NodeOfInterest]]
-  output <- tree_node$tip.label
+SelectingSubTreeData <- function(SubtreeObject, TwigOfInterest) {
+  tree_twig <- SubtreeObject[[TwigOfInterest]]
+  output <- tree_twig$tip.label
   output <- as.data.frame(output)
   output <- output %>%
-    mutate(Node = paste0("Node_", NodeOfInterest))
+    mutate(Twig = paste0("Twig_", TwigOfInterest))
   names(output)[1] <- "Barcode"
   return(output)
 }
