@@ -380,6 +380,9 @@ run <- function(infercnv_obj,
         ## Plot incremental steps.
         if (plot_steps){
             plot_cnv(infercnv_obj=infercnv_obj,
+                     obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -419,6 +422,9 @@ run <- function(infercnv_obj,
             if (plot_steps){
                 
                 plot_cnv(infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -490,6 +496,9 @@ run <- function(infercnv_obj,
             
             if (plot_steps) {
                 plot_cnv(infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -536,6 +545,9 @@ run <- function(infercnv_obj,
         
         if (plot_steps) {
             plot_cnv(infercnv_obj,
+                                          obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -584,6 +596,9 @@ run <- function(infercnv_obj,
             if (plot_steps){
                 
                 plot_cnv(infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -637,6 +652,9 @@ run <- function(infercnv_obj,
         if (plot_steps){
             
             plot_cnv(infercnv_obj,
+                                          obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -678,6 +696,9 @@ run <- function(infercnv_obj,
         if (plot_steps) {
             
             plot_cnv(infercnv_obj,
+                                          obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -717,6 +738,9 @@ run <- function(infercnv_obj,
         
         if (plot_steps) {
             plot_cnv(infercnv_obj,
+                                          obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -757,6 +781,9 @@ run <- function(infercnv_obj,
             if (plot_steps){
                 
                 plot_cnv(infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -796,6 +823,9 @@ run <- function(infercnv_obj,
         
         if (plot_steps) {
             plot_cnv(infercnv_obj,
+                                          obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -863,6 +893,9 @@ run <- function(infercnv_obj,
             if (plot_steps) {
                 
                 plot_cnv(infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -923,6 +956,9 @@ run <- function(infercnv_obj,
             
             #if (! file.exists(file.path(out_dir, prelim_heatmap_png))) {
             plot_cnv(infercnv_obj,
+                                          obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -970,6 +1006,9 @@ run <- function(infercnv_obj,
             if (plot_steps) {
                 
                 plot_cnv(infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1090,6 +1129,9 @@ run <- function(infercnv_obj,
                 
                 ## Plot HMM pred img
                 plot_cnv(infercnv_obj=hmm.infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1185,6 +1227,9 @@ run <- function(infercnv_obj,
             if (! no_plot) {
                 ## Plot HMM pred img after cnv removal
                 plot_cnv(infercnv_obj=hmm.infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1238,6 +1283,9 @@ run <- function(infercnv_obj,
             ## Plot HMM pred img
             if (! no_plot) {
                 plot_cnv(infercnv_obj=hmm.infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1292,6 +1340,9 @@ run <- function(infercnv_obj,
             if (plot_steps) {
                 
                 plot_cnv(infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1354,6 +1405,9 @@ run <- function(infercnv_obj,
             
             if (plot_steps) {
                 plot_cnv(infercnv_obj,
+                                              obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1389,6 +1443,9 @@ run <- function(infercnv_obj,
         flog.info("\n\n## Making the final infercnv heatmap ##")
         invisible(gc())
         plot_cnv(infercnv_obj,
+                                      obs_title="Observations (Spots)",
+                     ref_title="References (Spots)",
+                     contig_cex = 2, # 2 is the best choice
                  k_obs_groups=k_obs_groups,
                  cluster_by_groups=cluster_by_groups,
                  cluster_references=cluster_references,
