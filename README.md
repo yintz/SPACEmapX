@@ -9,9 +9,9 @@
 
 
 # SPACEMapX - Spatial Phylogenetic Analysis and Clonal Evolution: MAPping the lethal clone (X)
-This package provides guidance for analysis of spatially resolved tissue (Visium ST), focusing on clonal dynamics derived from infer copy number status.
+This package provides guidance for analysis of spatially resolved tissue (Visium ST), focusing on clonal dynamics derived from inferred copy number status.
 
-Our particular goal has been identification of the "lethal clone", defined as that which metasises from primary cancer tissue to lymph nodes. however, this package can be used for any analysis of clonal evolution and/or somatic mosaicism in heterogeneous tissue.  
+Our particular goal has been identification of the "lethal clone", defined as the clone which metasises from primary cancer tissue to lymph nodes. However, this package can be used for any analysis of clonal evolution and/or somatic mosaicism in heterogeneous tissue.  
 
 If you need any assistance with running this package, please feel free to contact us via GitHub "issue" messaging
 
@@ -39,7 +39,7 @@ https://github.com/yintz/SPACEmapX/wiki/SPACEmapX-tutorial
 
 
 ## Installation
-package can be installed through GitHub using;
+The package can be installed through GitHub using;
 ``` r
 install.packages("remotes")
 remotes::install_github("yintz/SPACEmapX")
@@ -59,11 +59,11 @@ ShowTwigSectionName(TrigID)
 
 # 10x ST Data
 
-This package is designed to work with Visium Fresh Forzen, FFPE V1,V2 data only.
+This package is designed to work with Visium Fresh Frozen, FFPE V1,V2 data only.
 
-If you need the ST test data, this is the data we used. 
+If you would like a represetative ST test dataset, please try these data [from Erickson et al, Nature 2022]. 
 [MendeleyRepository](https://data.mendeley.com/v1/datasets/svw96g68dv/draft?a=3f263217-2bd3-4a3c-8125-8c517c3a9e29).
-for more ST data, you can also go to 10X website to download.
+For more ST data, you can also go to 10X website to download [https://www.10xgenomics.com/datasets?query=&page=1&configure%5BhitsPerPage%5D=50&configure%5BmaxValuesPerFacet%5D=1000&refinementList%5Bproduct.name%5D%5B0%5D=Spatial%20Gene%20Expression&refinementList%5Bspecies%5D%5B0%5D=Human&refinementList%5Bchemistry.version%5D%5B0%5D=2].
 
 
 # Funding 
