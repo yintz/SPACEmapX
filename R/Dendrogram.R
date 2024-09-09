@@ -13,3 +13,4 @@ png("Dendrogram.png",width=10000,height=10500, res = 300)
 plot(clustering_phylo,show.tip.label = FALSE)
 nodelabels(text=1:clustering_phylo$Nnode,node=1:clustering_phylo$Nnode+Ntip(clustering_phylo))
 dev.off()
+}
