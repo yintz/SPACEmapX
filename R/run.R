@@ -144,7 +144,7 @@ run <- function(infercnv_obj,
     
     flog.info(paste("::process_data:Start", sep=""))
     
-    infercnv.env$GLOBAL_NUM_THREADS <- num_threads
+    SPACEmapX$GLOBAL_NUM_THREADS <- num_threads
     if (is.null(out_dir)) {
         flog.error("Error, out_dir is NULL, please provide a path.")
         stop("out_dir is NULL")
