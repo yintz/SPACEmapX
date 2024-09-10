@@ -1,5 +1,5 @@
 
-#' @title CreateInfercnvObject
+#' @title CreateSPACEmapXObject
 #'
 #' @param raw_counts_matrix  the matrix of genes (rows) vs. cells (columns) containing the raw counts
 #'                           If a filename is given, it'll be read via read.table()
@@ -19,7 +19,7 @@
 #'
 #' @param chr_exclude list of chromosomes in the reference genome annotations that should be excluded from analysis.  Default = c('chrX', 'chrY', 'chrM')
 #'
-#' @description Creation of an infercnv object. This requires the following inputs:
+#' @description Creation of an SPACEmapX object. This requires the following inputs:
 #' A more detailed description of each input is provided below:
 #'
 #' The raw_counts_matrix:
@@ -64,18 +64,18 @@
 #'
 #' and the ref_group_names vector might look like so:  c("Microglia/Macrophage","Oligodendrocytes (non-malignant)")
 #'
-#' @return infercnv
+#' @return SPACEmapX
 #'
 #' @export
 #'
 #' @examples
-#' data(infercnv_data_example)
-#' data(infercnv_annots_example)
-#' data(infercnv_genes_example)
+#' data(SPACEmapX_data_example)
+#' data(SPACEmapX_annots_example)
+#' data(SPACEmapX_genes_example)
 #'
-#' infercnv_object_example <- infercnv::CreateInfercnvObject(raw_counts_matrix=infercnv_data_example, 
-#'                                                gene_order_file=infercnv_genes_example,
-#'                                                annotations_file=infercnv_annots_example,
+#' SPACEmapX_object_example <- SPACEmapX::CreateSPACEmapXObject(raw_counts_matrix=SPACEmapX_data_example, 
+#'                                                gene_order_file=SPACEmapX_genes_example,
+#'                                                annotations_file=SPACEmapX_annots_example,
 #'                                                ref_group_names=c("normal"))
 #'
 
@@ -112,7 +112,7 @@ SPACEmapX <- methods::setClass(
 
 
 
-CreateInfercnvObject <- function(raw_counts_matrix,
+CreateSPACEmapXObject <- function(raw_counts_matrix,
                                  gene_order_file,
                                  annotations_file,
                                  ref_group_names,
@@ -143,7 +143,7 @@ CreateInfercnvObject <- function(raw_counts_matrix,
     } else if (Reduce("|", is(raw_counts_matrix) %in% c("data.frame"))) {
         raw.data <- as.matrix(raw_counts_matrix)
     } else {
-        stop("CreateInfercnvObject:: Error, raw_counts_matrix isn't recognized as a matrix, data.frame, or filename")
+        stop("CreateSPACEmapXObject:: Error, raw_counts_matrix isn't recognized as a matrix, data.frame, or filename")
     }
 
     ## get gene order info
@@ -155,7 +155,7 @@ CreateInfercnvObject <- function(raw_counts_matrix,
         gene_order <- gene_order_file
     }
     else {
-        stop("CreateInfercnvObject:: Error, gene_order_file isn't recognized as a matrix, data.frame, or filename")
+        stop("CreateSPACEmapXObject:: Error, gene_order_file isn't recognized as a matrix, data.frame, or filename")
     }
     names(gene_order) <- c(C_CHR, C_START, C_STOP)
     if (! is.null(chr_exclude) && any(which(gene_order$chr %in% chr_exclude))) {
@@ -171,7 +171,7 @@ CreateInfercnvObject <- function(raw_counts_matrix,
         input_classifications <- annotations_file
     }
     else {
-        stop("CreateInfercnvObject:: Error, annotations_file isn't recognized as a matrix, data.frame, or filename")
+        stop("CreateSPACEmapXObject:: Error, annotations_file isn't recognized as a matrix, data.frame, or filename")
     }
 
 
