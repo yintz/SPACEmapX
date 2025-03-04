@@ -1,4 +1,24 @@
-# LoadSTinfo <- function(csvfile) {
+LoadSTinfo <- function(csv_file_path) {
+# check if the file exits
+  if (!file.exists(file_path)) {
+    stop("Error: the file doesnt exist, please check the path.")
+  }
+  
+  # read csv file and first row as column names
+  data <- read.csv(file_path, header = TRUE, stringsAsFactors = FALSE)
+  
+  # return
+  return(data)
+}
+
+df <- read_csv_to_dataframe("your_file.csv")
+
+# check first few lines.
+head(df)
+
+
+
+  
 #   allSTtable<-read.csv(csvfile)
 #   allSTtable
 #   n=1
