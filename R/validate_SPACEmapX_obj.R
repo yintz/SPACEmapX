@@ -1,11 +1,11 @@
 
-#' @title validate_infercnv_obj()
+#' @title validate_SPACEmapX_obj()
 #'
-#' @description validate an infercnv_obj
+#' @description validate an SPACEmapX_obj
 #' ensures that order of genes in the @gene_order slot match up perfectly with the gene rows in the @expr.data matrix.
 #' Otherwise, throws an error and stops execution.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @return none
 #'
