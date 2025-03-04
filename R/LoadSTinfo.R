@@ -11,10 +11,10 @@ LoadSTinfo <- function(csv_file_path) {
   return(data)
 }
 
-df <- read_csv_to_dataframe("your_file.csv")
+# df <- LoadSTinfo("your_file.csv")
 
 # check first few lines.
-head(df)
+# head(df)
 
 
 
