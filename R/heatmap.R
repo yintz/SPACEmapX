@@ -14,7 +14,7 @@ get_group_color_palette <- function(){
 #'
 #' @title Plot the matrix as a heatmap, with cells as rows and genes as columns, ordered according to chromosome
 #'
-#' @param infercnv_obj infercnv object
+#' @param SPACEmapX_obj SPACEmapX object
 #' @param out_dir Directory in which to save pdf and other output.
 #' @param title Plot title.
 #' @param obs_title Title for the observations matrix.
@@ -50,16 +50,16 @@ get_group_color_palette <- function(){
 #' @export
 #'
 #' @examples
-#' # data(infercnv_data_example)
-#' # data(infercnv_annots_example)
-#' # data(infercnv_genes_example)
+#' # data(SPACEmapX_data_example)
+#' # data(SPACEmapX_annots_example)
+#' # data(SPACEmapX_genes_example)
 #'
-#' # infercnv_object_example <- infercnv::CreateInfercnvObject(raw_counts_matrix=infercnv_data_example, 
-#' #                                                           gene_order_file=infercnv_genes_example,
-#' #                                                           annotations_file=infercnv_annots_example,
+#' # SPACEmapX_object_example <- SPACEmapX::CreateSPACEmapXObject(raw_counts_matrix=SPACEmapX_data_example, 
+#' #                                                           gene_order_file=SPACEmapX_genes_example,
+#' #                                                           annotations_file=SPACEmapX_annots_example,
 #' #                                                           ref_group_names=c("normal"))
 #'
-#' # infercnv_object_example <- infercnv::run(infercnv_object_example,
+#' # SPACEmapX_object_example <- SPACEmapX::run(SPACEmapX_object_example,
 #' #                                          cutoff=1,
 #' #                                          out_dir=tempfile(), 
 #' #                                          cluster_by_groups=TRUE, 
@@ -68,9 +68,9 @@ get_group_color_palette <- function(){
 #' #                                          num_threads=2,
 #' #                                          no_plot=TRUE)
 #'
-#' data(infercnv_object_example)
+#' data(SPACEmapX_object_example)
 #'
-#' plot_cnv(infercnv_object_example,
+#' plot_cnv(SPACEmapX_object_example,
 #'          out_dir=tempfile(),
 #'          obs_title="Observations (Cells)",
 #'          ref_title="References (Cells)",
@@ -79,7 +79,7 @@ get_group_color_palette <- function(){
 #'          x.range="auto",
 #'          hclust_method='ward.D',
 #'          color_safe_pal=FALSE,
-#'          output_filename="infercnv",
+#'          output_filename="SPACEmapX",
 #'          output_format="png",
 #'          png_res=300,
 #'          dynamic_resize=0
@@ -97,9 +97,9 @@ C_OUTPUT_FORMAT <- c("pdf", "png")
 
 
 
-plot_cnv <- function(infercnv_obj,
+plot_cnv <- function(SPACEmapX_obj,
                      out_dir=".",
-                     title="inferCNV",
+                     title="SPACEmapX",
                      obs_title="Observations (Cells)",
                      ref_title="References (Cells)",
                      cluster_by_groups=TRUE,
@@ -108,12 +108,12 @@ plot_cnv <- function(infercnv_obj,
                      chr_lengths=NULL,
                      k_obs_groups = 1,
                      contig_cex=2,
-                     x.center=mean(infercnv_obj@expr.data),
+                     x.center=mean(SPACEmapX_obj@expr.data),
                      x.range="auto", #NA,
                      hclust_method='ward.D',
                      custom_color_pal=NULL,
                      color_safe_pal=FALSE,
-                     output_filename="infercnv",
+                     output_filename="SPACEmapX",
                      output_format="png", #pdf, png, NA
                      png_res=300,
                      dynamic_resize=0,
@@ -135,7 +135,7 @@ plot_cnv <- function(infercnv_obj,
         dir.create(out_dir)
     }
     
-    plot_data = infercnv_obj@expr.data
+    plot_data = SPACEmapX_obj@expr.data
     
     flog.info(paste("::plot_cnv:Start", sep=""))
     flog.info(paste("::plot_cnv:Current data dimensions (r,c)=",
@@ -189,13 +189,13 @@ plot_cnv <- function(infercnv_obj,
         plot_data[plot_data < low_threshold] <- low_threshold
         plot_data[plot_data > high_threshold] <- high_threshold
         
-        infercnv_obj@expr.data <- plot_data  #because used again below...
+        SPACEmapX_obj@expr.data <- plot_data  #because used again below...
         
     }
     
     
     # Contigs
-    contigs = infercnv_obj@gene_order[[C_CHR]]
+    contigs = SPACEmapX_obj@gene_order[[C_CHR]]
     unique_contigs <- unique(contigs)
     n_contig <- length(unique_contigs)
     ct.colors <- get_group_color_palette()(n_contig)
@@ -215,8 +215,8 @@ plot_cnv <- function(infercnv_obj,
     
     ## Row separation based on reference
     ref_idx <- NULL
-    if (has_reference_cells(infercnv_obj)) {
-        ref_idx <- unlist(infercnv_obj@reference_grouped_cell_indices)
+    if (has_reference_cells(SPACEmapX_obj)) {
+        ref_idx <- unlist(SPACEmapX_obj@reference_grouped_cell_indices)
         ref_idx = ref_idx[order(ref_idx)]
     }
     
@@ -242,14 +242,14 @@ plot_cnv <- function(infercnv_obj,
 
     # Calculate how many rows will be made for the number of columns in the grouping key
     grouping_key_coln <- c()
-    obs_annotations_names <- names(infercnv_obj@observation_grouped_cell_indices)
+    obs_annotations_names <- names(SPACEmapX_obj@observation_grouped_cell_indices)
 
 
    
     # obs_annotations_groups: integer vec named by cells, set to index according to category name vec above.
-    obs_annotations_groups = rep(-1, length(colnames(infercnv_obj@expr.data))) # init
-    names(obs_annotations_groups) = colnames(infercnv_obj@expr.data)
-    obs_index_groupings = infercnv_obj@observation_grouped_cell_indices
+    obs_annotations_groups = rep(-1, length(colnames(SPACEmapX_obj@expr.data))) # init
+    names(obs_annotations_groups) = colnames(SPACEmapX_obj@expr.data)
+    obs_index_groupings = SPACEmapX_obj@observation_grouped_cell_indices
     counter <- 1
     for (obs_index_group in obs_index_groupings) {
         obs_annotations_groups[ obs_index_group ] <- counter
@@ -266,7 +266,7 @@ plot_cnv <- function(infercnv_obj,
         dynamic_resize = 0
     }
     dynamic_extension = 0
-    nobs = length(unlist(infercnv_obj@observation_grouped_cell_indices))
+    nobs = length(unlist(SPACEmapX_obj@observation_grouped_cell_indices))
     if (nobs > 200) {
         dynamic_extension = dynamic_resize * 3.6 * (nobs - 200)/200 
     }
@@ -276,7 +276,7 @@ plot_cnv <- function(infercnv_obj,
         grouping_key_coln[1] <- 1
     }
 
-    name_ref_groups = names(infercnv_obj@reference_grouped_cell_indices)
+    name_ref_groups = names(SPACEmapX_obj@reference_grouped_cell_indices)
     if (is.null(name_ref_groups)) {
         grouping_key_coln[2] = 1
     } else {
@@ -324,7 +324,7 @@ plot_cnv <- function(infercnv_obj,
     ## Remove observation col names, too many to plot
     ## Will try and keep the reference names
     ## They are more informative anyway
-    obs_data <- infercnv_obj@expr.data
+    obs_data <- SPACEmapX_obj@expr.data
     if (!is.null(ref_idx)){
         obs_data <- plot_data[, -ref_idx, drop=FALSE]
         if (ncol(obs_data) == 1) {
@@ -342,8 +342,8 @@ plot_cnv <- function(infercnv_obj,
     updated_ref_groups <- list()
     current_ref_count <- 1
     current_grp_idx <- 1
-    plot_data <-infercnv_obj@expr.data
-    ref_groups = infercnv_obj@reference_grouped_cell_indices
+    plot_data <-SPACEmapX_obj@expr.data
+    ref_groups = SPACEmapX_obj@reference_grouped_cell_indices
     for (ref_grp in ref_groups) {
         ref_data_t <- cbind(ref_data_t, plot_data[, ref_grp, drop=FALSE])
         updated_ref_groups[[current_grp_idx]] = seq(current_ref_count, current_ref_count + length(ref_grp) - 1)
@@ -363,7 +363,7 @@ plot_cnv <- function(infercnv_obj,
     gene_position_breaks = NULL
     if (plot_chr_scale) {
         # gene table to heatmap width
-        chr_name_list = unique(infercnv_obj@gene_order[["chr"]])
+        chr_name_list = unique(SPACEmapX_obj@gene_order[["chr"]])
         
         # get average distance for tail end? 
         # optionally give vector of chr lengths
@@ -371,11 +371,11 @@ plot_cnv <- function(infercnv_obj,
         if (is.null(chr_lengths)) {
             chr_lengths = c()
             for (chr_name in chr_name_list) {
-                chr_lengths = c(chr_lengths, max(infercnv_obj@gene_order$stop[which(infercnv_obj@gene_order$chr == chr_name)]) + 10000)
+                chr_lengths = c(chr_lengths, max(SPACEmapX_obj@gene_order$stop[which(SPACEmapX_obj@gene_order$chr == chr_name)]) + 10000)
             }
             names(chr_lengths) = chr_name_list
         }
-        gene_position_breaks = vector(mode="integer", length=(length(unlist(infercnv_obj@gene_order$chr)) + 1))
+        gene_position_breaks = vector(mode="integer", length=(length(unlist(SPACEmapX_obj@gene_order$chr)) + 1))
 
         sum_previous_contigs = 0
         gene_position_breaks[1] = 1
@@ -383,12 +383,12 @@ plot_cnv <- function(infercnv_obj,
         col_sep_idx = 1
 
         for (chr_name in chr_name_list) {
-            index_pos = which(infercnv_obj@gene_order$chr == chr_name)
+            index_pos = which(SPACEmapX_obj@gene_order$chr == chr_name)
             latest_position = 1
             if (length(index_pos) > 1) {
                 for (i in index_pos[2:length(index_pos)]) {
-                    gene_position_breaks[current_idx] = sum_previous_contigs + ((latest_position + infercnv_obj@gene_order$start[i]) / 2)
-                    latest_position = max(infercnv_obj@gene_order$stop[i], latest_position)
+                    gene_position_breaks[current_idx] = sum_previous_contigs + ((latest_position + SPACEmapX_obj@gene_order$start[i]) / 2)
+                    latest_position = max(SPACEmapX_obj@gene_order$stop[i], latest_position)
                     current_idx = current_idx + 1
                 }
             }
@@ -413,7 +413,7 @@ plot_cnv <- function(infercnv_obj,
 
     # Create file base for plotting output
     force_layout <- .plot_observations_layout(grouping_key_height=grouping_key_height, dynamic_extension=dynamic_extension)
-    .plot_cnv_observations(infercnv_obj=infercnv_obj,
+    .plot_cnv_observations(SPACEmapX_obj=SPACEmapX_obj,
                           obs_data=obs_data,
                           file_base_name=out_dir,
                           do_plot=!is.na(output_format),
@@ -446,7 +446,7 @@ plot_cnv <- function(infercnv_obj,
     obs_data <- NULL
 
     if(!is.null(ref_idx)){
-        .plot_cnv_references(infercnv_obj=infercnv_obj,
+        .plot_cnv_references(SPACEmapX_obj=SPACEmapX_obj,
                             ref_data=ref_data_t,
                             ref_groups=ref_groups,
                             name_ref_groups=name_ref_groups,
