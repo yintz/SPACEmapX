@@ -1,4 +1,4 @@
-LoadSTinfo <- function(csv_file_path) {
+LoadSTinfo <- function(file_path) {
 # check if the file exits
   if (!file.exists(file_path)) {
     stop("Error: the file doesnt exist, please check the path.")
