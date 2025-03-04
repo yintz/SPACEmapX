@@ -1,7 +1,7 @@
 Package: SPACEmapX
 Type: Package
 Title: Spatially (Visium ST), analyse clonal dynamics derived from infer copy number status.
-Version: 0.1.0
+Version: 1.1.0
 Date: 2024-05-01
 Authors: Wencheng Yin
 BugReports: https://github.com/yintz/SPACEmapX/issues
