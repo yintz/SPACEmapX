@@ -1,9 +1,9 @@
 
 #' Function doing the actual analysis before calling the plotting functions.
 #'
-#' @title run() : Invokes a routine inferCNV analysis to Infer CNV changes given a matrix of RNASeq counts.
+#' @title run() : Invokes a routine SPACEmapX analysis to Infer CNV changes given a matrix of RNASeq counts.
 #'
-#' @param infercnv_obj An infercnv object populated with raw count data
+#' @param SPACEmapX_obj An SPACEmapX object populated with raw count data
 #'
 #' @param cutoff Cut-off for the min average read counts per gene among reference cells. (default: 1)
 #'
@@ -67,8 +67,8 @@
 #'
 #'
 #' @param HMM_type  HMM model type. Options: (i6 or i3):
-#'                          i6: infercnv 6-state model (0, 0.5, 1, 1.5, 2, >2) where state emissions are calibrated based on simulated CNV levels.
-#'                          i3: infercnv 3-state model (del, neutral, amp) configured based on normal cells and HMM_i3_pval
+#'                          i6: SPACEmapX 6-state model (0, 0.5, 1, 1.5, 2, >2) where state emissions are calibrated based on simulated CNV levels.
+#'                          i3: SPACEmapX 3-state model (del, neutral, amp) configured based on normal cells and HMM_i3_pval
 #'
 #' @param HMM_i3_pval     p-value for HMM i3 state overlap (default: 0.05)
 #'
@@ -155,17 +155,17 @@
 #'
 #' @param num_threads (int) number of threads for parallel steps (default: 4)
 #'
-#' @param plot_steps If true, saves infercnv objects and plots data at the intermediate steps.
+#' @param plot_steps If true, saves SPACEmapX objects and plots data at the intermediate steps.
 #'
 #' @param inspect_subclusters If true, plot subclusters as annotations after the subclustering step to easily see if the subclustering options are good. (default = TRUE)
 #'
-#' @param resume_mode  leverage pre-computed and stored infercnv objects where possible. (default=TRUE)
+#' @param resume_mode  leverage pre-computed and stored SPACEmapX objects where possible. (default=TRUE)
 #'
 #' @param png_res Resolution for png output.
 #'
 #' @param no_plot   don't make any of the images. Instead, generate all non-image outputs as part of the run. (default: FALSE)
 #'
-#' @param no_prelim_plot  don't make the preliminary infercnv image (default: FALSE)
+#' @param no_prelim_plot  don't make the preliminary SPACEmapX image (default: FALSE)
 #'
 #' @param write_expr_matrix Whether to write text files with the content of matrices when generating plots (default: FALSE)
 #'
@@ -215,21 +215,21 @@
 #'
 #' @param up_to_step run() only up to this exact step number (default: 100 >> 23 steps currently in the process)
 #'
-#' @return infercnv_obj containing filtered and transformed data
+#' @return SPACEmapX_obj containing filtered and transformed data
 #'
 #' @export
 #'
 #' @examples
-#' data(infercnv_data_example)
-#' data(infercnv_annots_example)
-#' data(infercnv_genes_example)
+#' data(SPACEmapX_data_example)
+#' data(SPACEmapX_annots_example)
+#' data(SPACEmapX_genes_example)
 #'
-#' infercnv_object_example <- infercnv::CreateInfercnvObject(raw_counts_matrix=infercnv_data_example, 
-#'                                                           gene_order_file=infercnv_genes_example,
-#'                                                           annotations_file=infercnv_annots_example,
+#' SPACEmapX_object_example <- SPACEmapX::CreateSPACEmapXObject(raw_counts_matrix=SPACEmapX_data_example, 
+#'                                                           gene_order_file=SPACEmapX_genes_example,
+#'                                                           annotations_file=SPACEmapX_annots_example,
 #'                                                           ref_group_names=c("normal"))
 #'
-#' infercnv_object_example <- infercnv::run(infercnv_object_example,
+#' SPACEmapX_object_example <- SPACEmapX::run(SPACEmapX_object_example,
 #'                                          cutoff=1,
 #'                                          out_dir=tempfile(), 
 #'                                          cluster_by_groups=TRUE, 
@@ -239,7 +239,7 @@
 #'                                          analysis_mode="samples",
 #'                                          no_plot=TRUE)
 #'
-run <- function(infercnv_obj,
+run <- function(SPACEmapX_obj,
 
                 # gene filtering settings
                 cutoff=1,
@@ -385,7 +385,7 @@ run <- function(infercnv_obj,
     
     flog.info(paste("::process_data:Start", sep=""))
     
-    infercnv.env$GLOBAL_NUM_THREADS <- num_threads
+    SPACEmapX.env$GLOBAL_NUM_THREADS <- num_threads
     if (is.null(out_dir)) {
         flog.error("Error, out_dir is NULL, please provide a path.")
         stop("out_dir is NULL")
@@ -394,7 +394,7 @@ run <- function(infercnv_obj,
     call_match = match.call()
 
     arg_names = names(call_match)
-    arg_names = arg_names[-which(arg_names == "" | arg_names == "infercnv_obj")]
+    arg_names = arg_names[-which(arg_names == "" | arg_names == "SPACEmapX_obj")]
 
     # evaluate variables such as output_dir
     for (n in arg_names) {
@@ -427,10 +427,10 @@ run <- function(infercnv_obj,
     call_match$sd_amplifier = sd_amplifier
     call_match$noise_logistic = noise_logistic
 
-    call_match$infercnv_obj = NULL
+    call_match$SPACEmapX_obj = NULL
 
     # pull the list of argument that are set by the user in case they differ from the default
-    current_args = as.list(call_match[-which(names(call_match) == "" | names(call_match) == "infercnv_obj")])
+    current_args = as.list(call_match[-which(names(call_match) == "" | names(call_match) == "SPACEmapX_obj")])
     # add the arguments that are checked against a list of allowed values and autofilled with the first if none is given using match.arg()
     # current_args$smooth_method = smooth_method
     # current_args$HMM_type = HMM_type
@@ -443,7 +443,7 @@ run <- function(infercnv_obj,
         dir.create(out_dir)
     }
 
-    infercnv_obj@options = c(current_args, infercnv_obj@options)
+    SPACEmapX_obj@options = c(current_args, SPACEmapX_obj@options)
 
     #run_call <- match.call()
     call_match[[1]] <- as.symbol(".get_relevant_args_list")
@@ -465,31 +465,31 @@ run <- function(infercnv_obj,
                 if ((i == 20) || (i %in% seq(17, 19) && skip_hmm == 0) || (i == 17 && skip_hmm == 2)) {   # step 17 appears in two conditions because if last found step is 18, step 19 requires the results of both step 17 and 18 to run
                     if (i == 18 && BayesMaxPNormal > 0) {  # mcmc_obj
                         mcmc_obj = readRDS(reload_info$expected_file_names[[i]])
-                        if (!.compare_args(infercnv_obj@options, unlist(reload_info$relevant_args[1:i]), mcmc_obj@options)) {
+                        if (!.compare_args(SPACEmapX_obj@options, unlist(reload_info$relevant_args[1:i]), mcmc_obj@options)) {
                             rm(mcmc_obj)
                             invisible(gc())
                         }
                         else {
-                            mcmc_obj@options = infercnv_obj@options
+                            mcmc_obj@options = SPACEmapX_obj@options
                             skip_hmm = max(skip_hmm, i - 16)
                             flog.info(paste0("Using backup MCMC from step ", i))
                         }
                     }
                     else {
-                        hmm.infercnv_obj = readRDS(reload_info$expected_file_names[[i]])
-                        if (!.compare_args(infercnv_obj@options, unlist(reload_info$relevant_args[1:i]), hmm.infercnv_obj@options)) {
-                            rm(hmm.infercnv_obj)
+                        hmm.SPACEmapX_obj = readRDS(reload_info$expected_file_names[[i]])
+                        if (!.compare_args(SPACEmapX_obj@options, unlist(reload_info$relevant_args[1:i]), hmm.SPACEmapX_obj@options)) {
+                            rm(hmm.SPACEmapX_obj)
                             invisible(gc())
                         }
                         else {
-                            hmm.infercnv_obj@options = infercnv_obj@options
+                            hmm.SPACEmapX_obj@options = SPACEmapX_obj@options
                             skip_hmm = max(skip_hmm, i - 16)  # max for case where step 18 is found, so can be skipped, but still needed to reload step 17 results to be able to run step 19
                             flog.info(paste0("Using backup HMM from step ", i))
                         }
                     }
                 }
                 else if (!(i %in% 17:20)) {
-                    reloaded_infercnv_obj = readRDS(reload_info$expected_file_names[[i]])
+                    reloaded_SPACEmapX_obj = readRDS(reload_info$expected_file_names[[i]])
                     if (skip_past > i) { # in case denoise was found
                         if (21 > i) { # if 22/21 already found and checked HMM too, stop
                             break
@@ -498,7 +498,7 @@ run <- function(infercnv_obj,
                             next
                         }
                     }
-                    if (.compare_args(infercnv_obj@options, unlist(reload_info$relevant_args[1:i]), reloaded_infercnv_obj@options)) {
+                    if (.compare_args(SPACEmapX_obj@options, unlist(reload_info$relevant_args[1:i]), reloaded_SPACEmapX_obj@options)) {
                         if (i ==  15 && per_chr_hmm_subclusters) {
                             tmp = nchar(reload_info$expected_file_names[[i]])
                             tmp = paste0(substr(reload_info$expected_file_names[[i]], 1, tmp-13), ".per_chr_subclusters", substr(reload_info$expected_file_names[[i]], tmp-12, tmp))
@@ -509,10 +509,10 @@ run <- function(infercnv_obj,
                                 next
                             }
                         }
-                        options_backup = infercnv_obj@options
-                        infercnv_obj = reloaded_infercnv_obj # replace input infercnv_obj
-                        rm(reloaded_infercnv_obj) # remove first (temporary) reference so there's no duplication when they would diverge
-                        infercnv_obj@options = options_backup
+                        options_backup = SPACEmapX_obj@options
+                        SPACEmapX_obj = reloaded_SPACEmapX_obj # replace input SPACEmapX_obj
+                        rm(reloaded_SPACEmapX_obj) # remove first (temporary) reference so there's no duplication when they would diverge
+                        SPACEmapX_obj@options = options_backup
                         skip_past = i
                         flog.info(paste0("Using backup from step ", i))
                         if (i < 21) { # do not stop check right away if denoise was found to also allow to check for HMM
@@ -520,7 +520,7 @@ run <- function(infercnv_obj,
                         }
                     }
                     else {
-                        rm(reloaded_infercnv_obj)
+                        rm(reloaded_SPACEmapX_obj)
                         invisible(gc())
                     }
                 }
@@ -533,20 +533,20 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 1
     flog.info(sprintf("\n\n\tSTEP %d: incoming data\n", step_count))
 
     if (skip_past < step_count && save_rds) {
-        saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+        saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
     }
     
     ## #################################################
     ## Step: removing insufficiently expressed genes
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 2
     flog.info(sprintf("\n\n\tSTEP %02d: Removing lowly expressed genes\n", step_count))
@@ -557,14 +557,14 @@ run <- function(infercnv_obj,
 
     if (skip_past < step_count) {
     # }
-        infercnv_obj <- require_above_min_mean_expr_cutoff(infercnv_obj, cutoff)
+        SPACEmapX_obj <- require_above_min_mean_expr_cutoff(SPACEmapX_obj, cutoff)
         
         ## require each gene to be present in a min number of cells for ref sets
         
-        infercnv_obj <- require_above_min_cells_ref(infercnv_obj, min_cells_per_gene=min_cells_per_gene)
+        SPACEmapX_obj <- require_above_min_cells_ref(SPACEmapX_obj, min_cells_per_gene=min_cells_per_gene)
         
         if (save_rds) {
-            saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+            saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
         }
     }
     
@@ -574,7 +574,7 @@ run <- function(infercnv_obj,
 
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 3
     flog.info(sprintf("\n\n\tSTEP %02d: normalization by sequencing depth\n", step_count))
@@ -583,19 +583,19 @@ run <- function(infercnv_obj,
     resume_file_token = ifelse( (HMM), paste0("HMM",HMM_type), "")
 
     if (skip_past < step_count) {
-        infercnv_obj <- normalize_counts_by_seq_depth(infercnv_obj)
+        SPACEmapX_obj <- normalize_counts_by_seq_depth(SPACEmapX_obj)
         
         if (HMM && HMM_type == 'i6') {
             ## add in the hidden spike needed by the HMM
-            infercnv_obj <- .build_and_add_hspike(infercnv_obj, sim_method=sim_method, aggregate_normals=hspike_aggregate_normals)
+            SPACEmapX_obj <- .build_and_add_hspike(SPACEmapX_obj, sim_method=sim_method, aggregate_normals=hspike_aggregate_normals)
             
             if (sim_foreground) {
-                infercnv_obj <- .sim_foreground(infercnv_obj, sim_method=sim_method)
+                SPACEmapX_obj <- .sim_foreground(SPACEmapX_obj, sim_method=sim_method)
             }
         }
         
         if (save_rds) {
-            saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+            saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
         }
     }
     
@@ -605,22 +605,22 @@ run <- function(infercnv_obj,
 
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 4
     flog.info(sprintf("\n\n\tSTEP %02d: log transformation of data\n", step_count))
 
     if (skip_past < step_count) {
-        infercnv_obj <- log2xplus1(infercnv_obj)
+        SPACEmapX_obj <- log2xplus1(SPACEmapX_obj)
 
         if (save_rds) {
-            saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+            saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
         }
         invisible(gc())
 
         ## Plot incremental steps.
         if (plot_steps){
-            plot_cnv(infercnv_obj=infercnv_obj,
+            plot_cnv(SPACEmapX_obj=SPACEmapX_obj,
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -628,7 +628,7 @@ run <- function(infercnv_obj,
                      chr_lengths=chr_lengths,
                      out_dir=out_dir,
                      title=sprintf("%02d_log_transformed_data",step_count),
-                     output_filename=sprintf("infercnv.%02d_log_transformed",step_count),
+                     output_filename=sprintf("SPACEmapX.%02d_log_transformed",step_count),
                      output_format=output_format,
                      write_expr_matrix=write_expr_matrix,
                      write_phylo=write_phylo,
@@ -641,7 +641,7 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 5
     if (scale_data) {
@@ -649,17 +649,17 @@ run <- function(infercnv_obj,
         flog.info(sprintf("\n\n\tSTEP %02d: scaling all expression data\n", step_count))
 
         if (skip_past < step_count) {
-            infercnv_obj <- scale_infercnv_expr(infercnv_obj)
+            SPACEmapX_obj <- scale_SPACEmapX_expr(SPACEmapX_obj)
             
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             invisible(gc())
             
             ## Plot incremental steps.
             if (plot_steps){
                 
-                plot_cnv(infercnv_obj,
+                plot_cnv(SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -667,7 +667,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_scaled",step_count),
-                         output_filename=sprintf("infercnv.%02d_scaled",step_count),
+                         output_filename=sprintf("SPACEmapX.%02d_scaled",step_count),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -684,23 +684,23 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 6
     if (!is.null(num_ref_groups)) {
         
-        if (! has_reference_cells(infercnv_obj)) {
+        if (! has_reference_cells(SPACEmapX_obj)) {
             stop("Error, no reference cells defined. Cannot split them into groups as requested")
         }
         
         flog.info(sprintf("\n\n\tSTEP %02d: splitting reference data into %d clusters\n", step_count, num_ref_groups))
 
         if (skip_past < step_count) {
-            infercnv_obj <- split_references(infercnv_obj,
+            SPACEmapX_obj <- split_references(SPACEmapX_obj,
                                        num_groups=num_ref_groups,
                                        hclust_method=hclust_method)
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
         }
         
@@ -710,7 +710,7 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 7
     if (analysis_mode == 'subclusters' & tumor_subcluster_partition_method == 'random_trees') {
@@ -720,17 +720,17 @@ run <- function(infercnv_obj,
         resume_file_token = paste0(resume_file_token, ".rand_trees")
 
         if (skip_past < step_count) {
-            infercnv_obj <- define_signif_tumor_subclusters_via_random_smooothed_trees(infercnv_obj,
+            SPACEmapX_obj <- define_signif_tumor_subclusters_via_random_smooothed_trees(SPACEmapX_obj,
                                                                                        p_val=tumor_subcluster_pval,
                                                                                        hclust_method=hclust_method,
                                                                                        cluster_by_groups=cluster_by_groups)
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             invisible(gc())
             
             if (plot_steps) {
-                plot_cnv(infercnv_obj,
+                plot_cnv(SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -738,7 +738,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_tumor_subclusters.%s", step_count, tumor_subcluster_partition_method),
-                         output_filename=sprintf("infercnv.%02d_tumor_subclusters.%s", step_count, tumor_subcluster_partition_method),
+                         output_filename=sprintf("SPACEmapX.%02d_tumor_subclusters.%s", step_count, tumor_subcluster_partition_method),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -748,9 +748,9 @@ run <- function(infercnv_obj,
             }
 
             if (inspect_subclusters) {
-                plot_subclusters(infercnv_obj,
+                plot_subclusters(SPACEmapX_obj,
                                  out_dir=out_dir,
-                                 output_filename="infercnv_subclusters")
+                                 output_filename="SPACEmapX_subclusters")
             }
         }
     }
@@ -762,21 +762,21 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 8
     flog.info(sprintf("\n\n\tSTEP %02d: removing average of reference data (before smoothing)\n", step_count))
 
     if (skip_past < step_count) {
-        infercnv_obj <- subtract_ref_expr_from_obs(infercnv_obj, inv_log=FALSE, use_bounds=ref_subtract_use_mean_bounds)
+        SPACEmapX_obj <- subtract_ref_expr_from_obs(SPACEmapX_obj, inv_log=FALSE, use_bounds=ref_subtract_use_mean_bounds)
         
         if (save_rds) {
-            saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+            saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
         }
         invisible(gc())
         
         if (plot_steps) {
-            plot_cnv(infercnv_obj,
+            plot_cnv(SPACEmapX_obj,
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -784,7 +784,7 @@ run <- function(infercnv_obj,
                      chr_lengths=chr_lengths,
                      out_dir=out_dir,
                      title=sprintf("%02d_remove_average",step_count),
-                     output_filename=sprintf("infercnv.%02d_remove_average", step_count),
+                     output_filename=sprintf("SPACEmapX.%02d_remove_average", step_count),
                      output_format=output_format,
                      write_expr_matrix=write_expr_matrix,
                      write_phylo=write_phylo,
@@ -796,7 +796,7 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 9
     if (! is.na(max_centered_threshold)) {
@@ -810,21 +810,21 @@ run <- function(infercnv_obj,
         if (skip_past < step_count) {
             threshold = max_centered_threshold
             if (is.character(max_centered_threshold) && max_centered_threshold == "auto") {
-                threshold = mean(abs(get_average_bounds(infercnv_obj)))
+                threshold = mean(abs(get_average_bounds(SPACEmapX_obj)))
                 flog.info(sprintf("Setting max centered threshoolds via auto to: +- %g", threshold))
             }
             
-            infercnv_obj <- apply_max_threshold_bounds(infercnv_obj, threshold=threshold)
+            SPACEmapX_obj <- apply_max_threshold_bounds(SPACEmapX_obj, threshold=threshold)
             
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             invisible(gc())
             
             ## Plot incremental steps.
             if (plot_steps){
                 
-                plot_cnv(infercnv_obj,
+                plot_cnv(SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -832,7 +832,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_apply_max_centered_expr_threshold",step_count),
-                         output_filename=sprintf("infercnv.%02d_apply_max_centred_expr_threshold",step_count),
+                         output_filename=sprintf("SPACEmapX.%02d_apply_max_centred_expr_threshold",step_count),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -850,7 +850,7 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 10
     flog.info(sprintf("\n\n\tSTEP %02d: Smoothing data per cell by chromosome\n", step_count))
@@ -859,25 +859,25 @@ run <- function(infercnv_obj,
 
         if (smooth_method == 'runmeans') {
             
-            infercnv_obj <- smooth_by_chromosome_runmeans(infercnv_obj, window_length)
+            SPACEmapX_obj <- smooth_by_chromosome_runmeans(SPACEmapX_obj, window_length)
         } else if (smooth_method == 'pyramidinal') {
             
-            infercnv_obj <- smooth_by_chromosome(infercnv_obj, window_length=window_length, smooth_ends=TRUE)
+            SPACEmapX_obj <- smooth_by_chromosome(SPACEmapX_obj, window_length=window_length, smooth_ends=TRUE)
         } else if (smooth_method == 'coordinates') {
-            infercnv_obj <- smooth_by_chromosome_coordinates(infercnv_obj, window_length=window_length)
+            SPACEmapX_obj <- smooth_by_chromosome_coordinates(SPACEmapX_obj, window_length=window_length)
         } else {
             stop(sprintf("Error, don't recognize smoothing method: %s", smooth_method))
         }
         
         if (save_rds) {
-            saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+            saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
         }
         invisible(gc())
         
         ## Plot incremental steps.
         if (plot_steps){
             
-            plot_cnv(infercnv_obj,
+            plot_cnv(SPACEmapX_obj,
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -885,7 +885,7 @@ run <- function(infercnv_obj,
                      chr_lengths=chr_lengths,
                      out_dir=out_dir,
                      title=sprintf("%02d_smoothed_by_chr",step_count),
-                     output_filename=sprintf("infercnv.%02d_smoothed_by_chr", step_count),
+                     output_filename=sprintf("SPACEmapX.%02d_smoothed_by_chr", step_count),
                      output_format=output_format,
                      write_expr_matrix=write_expr_matrix,
                      write_phylo=write_phylo,
@@ -902,23 +902,23 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 11
     flog.info(sprintf("\n\n\tSTEP %02d: re-centering data across chromosome after smoothing\n", step_count))
     
     if (skip_past < step_count) {
-        infercnv_obj <- center_cell_expr_across_chromosome(infercnv_obj, method="median")
+        SPACEmapX_obj <- center_cell_expr_across_chromosome(SPACEmapX_obj, method="median")
         
         if (save_rds) {
-            saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+            saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
         }
         invisible(gc())
         
         ## Plot incremental steps.
         if (plot_steps) {
             
-            plot_cnv(infercnv_obj,
+            plot_cnv(SPACEmapX_obj,
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -926,7 +926,7 @@ run <- function(infercnv_obj,
                      chr_lengths=chr_lengths,
                      out_dir=out_dir,
                      title=sprintf("%02d_centering_of_smoothed",step_count),
-                     output_filename=sprintf("infercnv.%02d_centering_of_smoothed", step_count),
+                     output_filename=sprintf("SPACEmapX.%02d_centering_of_smoothed", step_count),
                      output_format=output_format,
                      write_expr_matrix=write_expr_matrix,
                      write_phylo=write_phylo,
@@ -943,21 +943,21 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 12
     flog.info(sprintf("\n\n\tSTEP %02d: removing average of reference data (after smoothing)\n", step_count))
     
     if (skip_past < step_count) {
-        infercnv_obj <- subtract_ref_expr_from_obs(infercnv_obj, inv_log=FALSE, use_bounds=ref_subtract_use_mean_bounds)
+        SPACEmapX_obj <- subtract_ref_expr_from_obs(SPACEmapX_obj, inv_log=FALSE, use_bounds=ref_subtract_use_mean_bounds)
         
         if (save_rds) {
-            saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+            saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
         }
         invisible(gc())
         
         if (plot_steps) {
-            plot_cnv(infercnv_obj,
+            plot_cnv(SPACEmapX_obj,
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -965,7 +965,7 @@ run <- function(infercnv_obj,
                      chr_lengths=chr_lengths,
                      out_dir=out_dir,
                      title=sprintf("%02d_remove_average",step_count),
-                     output_filename=sprintf("infercnv.%02d_remove_average", step_count),
+                     output_filename=sprintf("SPACEmapX.%02d_remove_average", step_count),
                      output_format=output_format,
                      write_expr_matrix=write_expr_matrix,
                      write_phylo=write_phylo,
@@ -979,7 +979,7 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 13
     if (remove_genes_at_chr_ends == TRUE && smooth_method != 'coordinates') {
@@ -987,17 +987,17 @@ run <- function(infercnv_obj,
         flog.info(sprintf("\n\n\tSTEP %02d: removing genes at chr ends\n", step_count))
         
         if (skip_past < step_count) {
-            infercnv_obj <- remove_genes_at_ends_of_chromosomes(infercnv_obj, window_length)
+            SPACEmapX_obj <- remove_genes_at_ends_of_chromosomes(SPACEmapX_obj, window_length)
             
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             invisible(gc())
             
             ## Plot incremental steps.
             if (plot_steps){
                 
-                plot_cnv(infercnv_obj,
+                plot_cnv(SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1005,7 +1005,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_remove_genes_at_chr_ends",step_count),
-                         output_filename=sprintf("infercnv.%02d_remove_genes_at_chr_ends",step_count),
+                         output_filename=sprintf("SPACEmapX.%02d_remove_genes_at_chr_ends",step_count),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -1021,22 +1021,22 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 14
     flog.info(sprintf("\n\n\tSTEP %02d: invert log2(FC) to FC\n", step_count))
 
     if (skip_past < step_count) {
         
-        infercnv_obj <- invert_log2(infercnv_obj)
+        SPACEmapX_obj <- invert_log2(SPACEmapX_obj)
         
         if (save_rds) {
-            saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+            saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
         }
         invisible(gc())
         
         if (plot_steps) {
-            plot_cnv(infercnv_obj,
+            plot_cnv(SPACEmapX_obj,
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
@@ -1044,7 +1044,7 @@ run <- function(infercnv_obj,
                      chr_lengths=chr_lengths,
                      out_dir=out_dir,
                      title=sprintf("%02d_invert_log_transform log(FC)->FC",step_count),
-                     output_filename=sprintf("infercnv.%02d_invert_log_FC",step_count),
+                     output_filename=sprintf("SPACEmapX.%02d_invert_log_FC",step_count),
                      output_format=output_format,
                      write_expr_matrix=write_expr_matrix,
                      write_phylo=write_phylo,
@@ -1056,12 +1056,12 @@ run <- function(infercnv_obj,
     
     
     ## ###################################################################
-    ## Done restoring infercnv_obj's from files now under resume_mode
+    ## Done restoring SPACEmapX_obj's from files now under resume_mode
     ## ###################################################################
 
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 15
     if (analysis_mode == 'subclusters' & tumor_subcluster_partition_method != 'random_trees') {
@@ -1071,7 +1071,7 @@ run <- function(infercnv_obj,
         flog.info(sprintf("\n\n\tSTEP %02d: computing tumor subclusters via %s\n", step_count, tumor_subcluster_partition_method))
         
         if (skip_past < step_count) {
-            res <- define_signif_tumor_subclusters(infercnv_obj = infercnv_obj,
+            res <- define_signif_tumor_subclusters(SPACEmapX_obj = SPACEmapX_obj,
                                                    p_val = tumor_subcluster_pval,
                                                    k_nn = k_nn,
                                                    leiden_resolution = leiden_resolution,
@@ -1087,12 +1087,12 @@ run <- function(infercnv_obj,
                                                    z_score_filter=z_score_filter
                                                    )
 
-            infercnv_obj = res[[1]]
+            SPACEmapX_obj = res[[1]]
             subclusters_per_chr = res[[2]]
             rm(res)
 
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
                 if(per_chr_hmm_subclusters) {
                     tmp = nchar(reload_info$expected_file_names[[step_count]])
                     tmp = paste0(substr(reload_info$expected_file_names[[step_count]], 1, tmp-13), ".per_chr_subclusters", substr(reload_info$expected_file_names[[step_count]], tmp-12, tmp))
@@ -1103,7 +1103,7 @@ run <- function(infercnv_obj,
             
             if (plot_steps) {
                 
-                plot_cnv(infercnv_obj,
+                plot_cnv(SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1111,7 +1111,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_tumor_subclusters",step_count),
-                         output_filename=sprintf("infercnv.%02d_tumor_subclusters",step_count),
+                         output_filename=sprintf("SPACEmapX.%02d_tumor_subclusters",step_count),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -1120,9 +1120,9 @@ run <- function(infercnv_obj,
             }
 
             if (inspect_subclusters) {
-                plot_subclusters(infercnv_obj,
+                plot_subclusters(SPACEmapX_obj,
                                  out_dir=out_dir,
-                                 output_filename="infercnv_subclusters")
+                                 output_filename="SPACEmapX_subclusters")
             }
         }
     }
@@ -1133,7 +1133,7 @@ run <- function(infercnv_obj,
         if (skip_past < step_count) {
             
             
-            infercnv_obj <- define_signif_tumor_subclusters(infercnv_obj,
+            SPACEmapX_obj <- define_signif_tumor_subclusters(SPACEmapX_obj,
                                                             p_val=tumor_subcluster_pval,
                                                             hclust_method=hclust_method,
                                                             cluster_by_groups=cluster_by_groups,
@@ -1143,7 +1143,7 @@ run <- function(infercnv_obj,
                                                             )[[1]]
             
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
         }
         
@@ -1153,25 +1153,25 @@ run <- function(infercnv_obj,
     ## This is a milestone step and results should always be examined here.
     if (skip_past < step_count) {
         if (save_rds) {
-            saveRDS(infercnv_obj, file=file.path(out_dir, "preliminary.infercnv_obj"))
+            saveRDS(SPACEmapX_obj, file=file.path(out_dir, "preliminary.SPACEmapX_obj"))
         }
         
         invisible(gc())
     
         if (! (no_prelim_plot | no_plot) ) {
             
-            #prelim_heatmap_png = "infercnv.preliminary.png"
+            #prelim_heatmap_png = "SPACEmapX.preliminary.png"
             
             #if (! file.exists(file.path(out_dir, prelim_heatmap_png))) {
-            plot_cnv(infercnv_obj,
+            plot_cnv(SPACEmapX_obj,
                      k_obs_groups=k_obs_groups,
                      cluster_by_groups=cluster_by_groups,
                      cluster_references=cluster_references,
                      plot_chr_scale=plot_chr_scale,
                      chr_lengths=chr_lengths,
                      out_dir=out_dir,
-                     title="Preliminary infercnv (pre-noise filtering)",
-                     output_filename="infercnv.preliminary", # png ext auto added
+                     title="Preliminary SPACEmapX (pre-noise filtering)",
+                     output_filename="SPACEmapX.preliminary", # png ext auto added
                      output_format=output_format,
                      write_expr_matrix=write_expr_matrix,
                      write_phylo=write_phylo,
@@ -1185,7 +1185,7 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 16
     if (prune_outliers) {
@@ -1197,20 +1197,20 @@ run <- function(infercnv_obj,
 
         if (skip_past < step_count) {
             
-            infercnv_obj = remove_outliers_norm(infercnv_obj,
+            SPACEmapX_obj = remove_outliers_norm(SPACEmapX_obj,
                                                 out_method=outlier_method_bound,
                                                 lower_bound=outlier_lower_bound,
                                                 upper_bound=outlier_upper_bound)
             
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             invisible(gc())
             
             ## Plot incremental steps.
             if (plot_steps) {
                 
-                plot_cnv(infercnv_obj,
+                plot_cnv(SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1218,7 +1218,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_removed_outliers",step_count),
-                         output_filename=sprintf("infercnv.%02d_removed_outliers", step_count),
+                         output_filename=sprintf("SPACEmapX.%02d_removed_outliers", step_count),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -1230,7 +1230,7 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 17
     hmm_resume_file_token = paste0(resume_file_token, ".hmm_mode-", analysis_mode)
@@ -1252,16 +1252,16 @@ run <- function(infercnv_obj,
                 
                 if (HMM_type == 'i6') {
                     if (tumor_subcluster_partition_method == "leiden" && per_chr_hmm_subclusters) {
-                        hmm.infercnv_obj <- predict_CNV_via_HMM_on_tumor_subclusters_per_chr(infercnv_obj = infercnv_obj, 
+                        hmm.SPACEmapX_obj <- predict_CNV_via_HMM_on_tumor_subclusters_per_chr(SPACEmapX_obj = SPACEmapX_obj, 
                                                                                              subclusters_per_chr = subclusters_per_chr,
                                                                                              t=HMM_transition_prob)
                     }
                     else {
-                        hmm.infercnv_obj <- predict_CNV_via_HMM_on_tumor_subclusters(infercnv_obj = infercnv_obj,
+                        hmm.SPACEmapX_obj <- predict_CNV_via_HMM_on_tumor_subclusters(SPACEmapX_obj = SPACEmapX_obj,
                                                                                      t=HMM_transition_prob)
                     }
                 } else if (HMM_type == 'i3') {
-                    hmm.infercnv_obj <- i3HMM_predict_CNV_via_HMM_on_tumor_subclusters(infercnv_obj,
+                    hmm.SPACEmapX_obj <- i3HMM_predict_CNV_via_HMM_on_tumor_subclusters(SPACEmapX_obj,
                                                                                        i3_p_val=HMM_i3_pval,
                                                                                        t=HMM_transition_prob,
                                                                                        use_KS=HMM_i3_use_KS)
@@ -1271,15 +1271,15 @@ run <- function(infercnv_obj,
 
                 if (tumor_subcluster_partition_method == 'random_trees') {
                     ## need to redo the hierarchicial clustering, since the subcluster assignments dont always perfectly line up with the top-level dendrogram.
-                    hmm.infercnv_obj <- .redo_hierarchical_clustering(hmm.infercnv_obj, hclust_method=hclust_method)
+                    hmm.SPACEmapX_obj <- .redo_hierarchical_clustering(hmm.SPACEmapX_obj, hclust_method=hclust_method)
                 }
                 
             } else if (analysis_mode == 'cells') {
                 
                 if (HMM_type == 'i6') {
-                    hmm.infercnv_obj <- predict_CNV_via_HMM_on_indiv_cells(infercnv_obj, t=HMM_transition_prob)
+                    hmm.SPACEmapX_obj <- predict_CNV_via_HMM_on_indiv_cells(SPACEmapX_obj, t=HMM_transition_prob)
                 } else if (HMM_type == 'i3') {
-                    hmm.infercnv_obj <- i3HMM_predict_CNV_via_HMM_on_indiv_cells(infercnv_obj,
+                    hmm.SPACEmapX_obj <- i3HMM_predict_CNV_via_HMM_on_indiv_cells(SPACEmapX_obj,
                                                                                  i3_p_val=HMM_i3_pval,
                                                                                  t=HMM_transition_prob,
                                                                                  use_KS=HMM_i3_use_KS)
@@ -1292,9 +1292,9 @@ run <- function(infercnv_obj,
                 ## samples mode
                 
                 if (HMM_type == 'i6') {
-                    hmm.infercnv_obj <- predict_CNV_via_HMM_on_whole_tumor_samples(infercnv_obj, t=HMM_transition_prob)
+                    hmm.SPACEmapX_obj <- predict_CNV_via_HMM_on_whole_tumor_samples(SPACEmapX_obj, t=HMM_transition_prob)
                 } else if (HMM_type == 'i3') {
-                    hmm.infercnv_obj <- i3HMM_predict_CNV_via_HMM_on_tumor_subclusters(infercnv_obj,
+                    hmm.SPACEmapX_obj <- i3HMM_predict_CNV_via_HMM_on_tumor_subclusters(SPACEmapX_obj,
                                                                                        i3_p_val=HMM_i3_pval,
                                                                                        t=HMM_transition_prob,
                                                                                        use_KS=HMM_i3_use_KS
@@ -1307,7 +1307,7 @@ run <- function(infercnv_obj,
             
             
             ## report predicted cnv regions:
-            generate_cnv_region_reports(hmm.infercnv_obj,
+            generate_cnv_region_reports(hmm.SPACEmapX_obj,
                                         output_filename_prefix=sprintf("%02d_HMM_pred%s", step_count, hmm_resume_file_token),
                                         out_dir=out_dir,
                                         ignore_neutral_state=hmm_center,
@@ -1319,7 +1319,7 @@ run <- function(infercnv_obj,
             ## ##################################
             
             if (save_rds) {
-                saveRDS(hmm.infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(hmm.SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
 
             invisible(gc())
@@ -1327,7 +1327,7 @@ run <- function(infercnv_obj,
             if (! no_plot) {
                 
                 ## Plot HMM pred img
-                plot_cnv(infercnv_obj=hmm.infercnv_obj,
+                plot_cnv(SPACEmapX_obj=hmm.SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1335,7 +1335,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_HMM_preds",step_count),
-                         output_filename=sprintf("infercnv.%02d_HMM_pred%s", step_count, hmm_resume_file_token),
+                         output_filename=sprintf("SPACEmapX.%02d_HMM_pred%s", step_count, hmm_resume_file_token),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -1354,17 +1354,17 @@ run <- function(infercnv_obj,
         
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 18
     if (skip_hmm < 2) {
-        if (HMM == TRUE && BayesMaxPNormal > 0 && length(unique(apply(hmm.infercnv_obj@expr.data,2,unique))) != 1 ) {
+        if (HMM == TRUE && BayesMaxPNormal > 0 && length(unique(apply(hmm.SPACEmapX_obj@expr.data,2,unique))) != 1 ) {
             flog.info(sprintf("\n\n\tSTEP %02d: Run Bayesian Network Model on HMM predicted CNVs\n", step_count))
             
             ## the MCMC  object
             
-            mcmc_obj <- infercnv::inferCNVBayesNet( infercnv_obj     = infercnv_obj,
-                                                   HMM_states        = hmm.infercnv_obj@expr.data,
+            mcmc_obj <- SPACEmapX::SPACEmapXBayesNet( SPACEmapX_obj     = SPACEmapX_obj,
+                                                   HMM_states        = hmm.SPACEmapX_obj@expr.data,
                                                    file_dir          = out_dir,
                                                    no_plot           = no_plot,
                                                    postMcmcMethod    = "removeCNV",
@@ -1397,32 +1397,32 @@ run <- function(infercnv_obj,
 
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 19
     if (skip_hmm < 3) {
-        if (HMM == TRUE && BayesMaxPNormal > 0 && length(unique(apply(hmm.infercnv_obj@expr.data,2,unique))) != 1 ) {
+        if (HMM == TRUE && BayesMaxPNormal > 0 && length(unique(apply(hmm.SPACEmapX_obj@expr.data,2,unique))) != 1 ) {
             flog.info(sprintf("\n\n\tSTEP %02d: Filter HMM predicted CNVs based on the Bayesian Network Model results and BayesMaxPNormal\n", step_count))
             ## Filter CNV's by posterior Probabilities
-            mcmc_obj_hmm_states_list <- infercnv::filterHighPNormals( MCMC_inferCNV_obj = mcmc_obj,
-                                                                     HMM_states         = hmm.infercnv_obj@expr.data, 
+            mcmc_obj_hmm_states_list <- SPACEmapX::filterHighPNormals( MCMC_SPACEmapX_obj = mcmc_obj,
+                                                                     HMM_states         = hmm.SPACEmapX_obj@expr.data, 
                                                                      BayesMaxPNormal    = BayesMaxPNormal,
                                                                      useRaster          = useRaster)
             
             hmm_states_highPnormCNVsRemoved.matrix <- mcmc_obj_hmm_states_list[[2]]
 
             # replace states
-            hmm.infercnv_obj@expr.data <- hmm_states_highPnormCNVsRemoved.matrix
+            hmm.SPACEmapX_obj@expr.data <- hmm_states_highPnormCNVsRemoved.matrix
             
-            ## Save the MCMC inferCNV object
+            ## Save the MCMC SPACEmapX object
             if (save_rds) {
-                saveRDS(hmm.infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(hmm.SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             invisible(gc())
             
             if (! no_plot) {
                 ## Plot HMM pred img after cnv removal
-                plot_cnv(infercnv_obj=hmm.infercnv_obj,
+                plot_cnv(SPACEmapX_obj=hmm.SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1430,7 +1430,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_HMM_preds_Bayes_Net",step_count),
-                         output_filename=sprintf("infercnv.%02d_HMM_pred.Bayes_Net.Pnorm_%g",step_count, BayesMaxPNormal),
+                         output_filename=sprintf("SPACEmapX.%02d_HMM_pred.Bayes_Net.Pnorm_%g",step_count, BayesMaxPNormal),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -1455,7 +1455,7 @@ run <- function(infercnv_obj,
         
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 20
     if (skip_hmm < 4) {
@@ -1463,19 +1463,19 @@ run <- function(infercnv_obj,
             flog.info(sprintf("\n\n\tSTEP %02d: Converting HMM-based CNV states to repr expr vals\n", step_count))
             
             if (HMM_type == 'i6') {
-                hmm.infercnv_obj <- assign_HMM_states_to_proxy_expr_vals(hmm.infercnv_obj)
+                hmm.SPACEmapX_obj <- assign_HMM_states_to_proxy_expr_vals(hmm.SPACEmapX_obj)
             } else if (HMM_type == 'i3') {
-                hmm.infercnv_obj <- i3HMM_assign_HMM_states_to_proxy_expr_vals(hmm.infercnv_obj)
+                hmm.SPACEmapX_obj <- i3HMM_assign_HMM_states_to_proxy_expr_vals(hmm.SPACEmapX_obj)
             }
             
             if (save_rds) {
-                saveRDS(hmm.infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(hmm.SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             invisible(gc())
             
             ## Plot HMM pred img
             if (! no_plot) {
-                plot_cnv(infercnv_obj=hmm.infercnv_obj,
+                plot_cnv(SPACEmapX_obj=hmm.SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1483,7 +1483,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_HMM_preds.repr_intensities",step_count),
-                         output_filename=sprintf("infercnv.%02d_HMM_pred%s.Pnorm_%g.repr_intensities", step_count, hmm_resume_file_token, BayesMaxPNormal),
+                         output_filename=sprintf("SPACEmapX.%02d_HMM_pred%s.Pnorm_%g.repr_intensities", step_count, hmm_resume_file_token, BayesMaxPNormal),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -1501,12 +1501,12 @@ run <- function(infercnv_obj,
     ## Step: Filtering significantly DE genes
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 21
     if (mask_nonDE_genes) {
         
-        if (!has_reference_cells(infercnv_obj)) {
+        if (!has_reference_cells(SPACEmapX_obj)) {
             stop("Error, cannot mask non-DE genes when there are no normal references set")
         }
         
@@ -1514,14 +1514,14 @@ run <- function(infercnv_obj,
 
         if (skip_past < step_count) {
 
-            infercnv_obj <- mask_non_DE_genes_basic(infercnv_obj,
+            SPACEmapX_obj <- mask_non_DE_genes_basic(SPACEmapX_obj,
                                                     p_val_thresh=mask_nonDE_pval,
                                                     test.use = test.use,
-                                                    center_val=mean(infercnv_obj@expr.data),
+                                                    center_val=mean(SPACEmapX_obj@expr.data),
                                                     require_DE_all_normals=require_DE_all_normals)
             
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             
             invisible(gc())
@@ -1529,7 +1529,7 @@ run <- function(infercnv_obj,
             ## Plot incremental steps.
             if (plot_steps) {
                 
-                plot_cnv(infercnv_obj,
+                plot_cnv(SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1537,7 +1537,7 @@ run <- function(infercnv_obj,
                          chr_lengths=chr_lengths,
                          out_dir=out_dir,
                          title=sprintf("%02d_mask_nonDE",step_count),
-                         output_filename=sprintf("infercnv.%02d_mask_nonDE", step_count),
+                         output_filename=sprintf("SPACEmapX.%02d_mask_nonDE", step_count),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -1551,7 +1551,7 @@ run <- function(infercnv_obj,
     
     if (up_to_step == step_count) {
         flog.info("Reached up_to_step")
-        return(infercnv_obj)
+        return(SPACEmapX_obj)
     }
     step_count = step_count + 1 # 22
     if (denoise) {
@@ -1567,7 +1567,7 @@ run <- function(infercnv_obj,
                 
                 if (noise_filter > 0) {
                     flog.info(paste("::process_data:Remove noise, noise threshold at: ", noise_filter))
-                    infercnv_obj <- clear_noise(infercnv_obj,
+                    SPACEmapX_obj <- clear_noise(SPACEmapX_obj,
                                                 threshold=noise_filter,
                                                 noise_logistic=noise_logistic)
                 }
@@ -1580,18 +1580,18 @@ run <- function(infercnv_obj,
             else {
                 ## default, use quantiles, if NA
                 flog.info(paste("::process_data:Remove noise, noise threshold defined via ref mean sd_amplifier: ", sd_amplifier))
-                infercnv_obj <- clear_noise_via_ref_mean_sd(infercnv_obj,
+                SPACEmapX_obj <- clear_noise_via_ref_mean_sd(SPACEmapX_obj,
                                                             sd_amplifier = sd_amplifier,
                                                             noise_logistic=noise_logistic)
             }
             
             if (save_rds) {
-                saveRDS(infercnv_obj, reload_info$expected_file_names[[step_count]])
+                saveRDS(SPACEmapX_obj, reload_info$expected_file_names[[step_count]])
             }
             invisible(gc())
             
             if (plot_steps) {
-                plot_cnv(infercnv_obj,
+                plot_cnv(SPACEmapX_obj,
                          k_obs_groups=k_obs_groups,
                          cluster_by_groups=cluster_by_groups,
                          cluster_references=cluster_references,
@@ -1600,7 +1600,7 @@ run <- function(infercnv_obj,
                          out_dir=out_dir,
                          color_safe_pal=FALSE,
                          title=sprintf("%02d_denoised", step_count),
-                         output_filename=sprintf("infercnv.%02d_denoised", step_count),
+                         output_filename=sprintf("SPACEmapX.%02d_denoised", step_count),
                          output_format=output_format,
                          write_expr_matrix=write_expr_matrix,
                          write_phylo=write_phylo,
@@ -1612,7 +1612,7 @@ run <- function(infercnv_obj,
     }
     
     if (save_final_rds) {
-        saveRDS(infercnv_obj, file=file.path(out_dir, "run.final.infercnv_obj"))
+        saveRDS(SPACEmapX_obj, file=file.path(out_dir, "run.final.SPACEmapX_obj"))
     }
     
     if (! no_plot) {
@@ -1624,9 +1624,9 @@ run <- function(infercnv_obj,
         }
         
         
-        flog.info("\n\n## Making the final infercnv heatmap ##")
+        flog.info("\n\n## Making the final SPACEmapX heatmap ##")
         invisible(gc())
-        plot_cnv(infercnv_obj,
+        plot_cnv(SPACEmapX_obj,
                  k_obs_groups=k_obs_groups,
                  cluster_by_groups=cluster_by_groups,
                  cluster_references=cluster_references,
@@ -1635,8 +1635,8 @@ run <- function(infercnv_obj,
                  out_dir=out_dir,
                  x.center=final_center_val,
                  x.range=final_scale_limits,
-                 title="inferCNV",
-                 output_filename="infercnv",
+                 title="SPACEmapX",
+                 output_filename="SPACEmapX",
                  output_format=output_format,
                  write_expr_matrix=write_expr_matrix,
                  write_phylo=write_phylo,
@@ -1644,7 +1644,7 @@ run <- function(infercnv_obj,
                  useRaster=useRaster)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -1659,42 +1659,42 @@ run <- function(infercnv_obj,
 #' of the averages are subtracted from the observation expression levels. Any values within the range
 #' of the min,max of the group are set to zero.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param inv_log mean values will be determined based on (2^x -1)
 #'
 #' @param use_bounds if multiple normal data sets are used, it takes the bounds of the means from each set for subtraction.
 #'                   Alternatively, will use the mean( mean(normal) for each normal)    default: TRUE
 #'
-#' @return infercnv_obj containing the reference subtracted values.
+#' @return SPACEmapX_obj containing the reference subtracted values.
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-subtract_ref_expr_from_obs <- function(infercnv_obj, inv_log=FALSE, use_bounds=TRUE) {
+subtract_ref_expr_from_obs <- function(SPACEmapX_obj, inv_log=FALSE, use_bounds=TRUE) {
     ## r = genes, c = cells
     flog.info(sprintf("::subtract_ref_expr_from_obs:Start inv_log=%s, use_bounds=%s", inv_log, use_bounds))
     
     
-    if (has_reference_cells(infercnv_obj)) {
-        ref_groups = infercnv_obj@reference_grouped_cell_indices
+    if (has_reference_cells(SPACEmapX_obj)) {
+        ref_groups = SPACEmapX_obj@reference_grouped_cell_indices
         flog.info("subtracting mean(normal) per gene per cell across all data")
     } else {
-        ref_groups = list('proxyNormal' = unlist(infercnv_obj@observation_grouped_cell_indices))
+        ref_groups = list('proxyNormal' = unlist(SPACEmapX_obj@observation_grouped_cell_indices))
         flog.info("-no reference cells specified... using mean of all cells as proxy")
     }
     
-    ref_grp_gene_means <- .get_normal_gene_mean_bounds(infercnv_obj@expr.data, ref_groups, inv_log=inv_log)
+    ref_grp_gene_means <- .get_normal_gene_mean_bounds(SPACEmapX_obj@expr.data, ref_groups, inv_log=inv_log)
     
-    infercnv_obj@expr.data <- .subtract_expr(infercnv_obj@expr.data, ref_grp_gene_means, use_bounds=use_bounds)
+    SPACEmapX_obj@expr.data <- .subtract_expr(SPACEmapX_obj@expr.data, ref_grp_gene_means, use_bounds=use_bounds)
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- subtract_ref_expr_from_obs(infercnv_obj@.hspike, inv_log=inv_log, use_bounds=use_bounds)
+        SPACEmapX_obj@.hspike <- subtract_ref_expr_from_obs(SPACEmapX_obj@.hspike, inv_log=inv_log, use_bounds=use_bounds)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -1899,32 +1899,32 @@ create_sep_list <- function(row_count,
 #' @description Split up reference observations in to k groups based on hierarchical clustering.
 #'
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param num_groups (default: 2)
 #'
 #' @param hclust_method clustering method to use (default: 'complete')
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-split_references <- function(infercnv_obj,
+split_references <- function(SPACEmapX_obj,
                              num_groups=2,
                              hclust_method='complete') {
     
     
     flog.info(paste("::split_references:Start", sep=""))
     
-    if ("sparseMatrix" %in% is(infercnv_obj@expr.data)) {
-        infercnv_obj@expr.data = as.matrix(infercnv_obj@expr.data)
+    if ("sparseMatrix" %in% is(SPACEmapX_obj@expr.data)) {
+        SPACEmapX_obj@expr.data = as.matrix(SPACEmapX_obj@expr.data)
     }
 
-    ref_expr_matrix = infercnv_obj@expr.data[ , get_reference_grouped_cell_indices(infercnv_obj) ]
+    ref_expr_matrix = SPACEmapX_obj@expr.data[ , get_reference_grouped_cell_indices(SPACEmapX_obj) ]
     
-    hc <- hclust(parallelDist(t(ref_expr_matrix), threads=infercnv.env$GLOBAL_NUM_THREADS), method=hclust_method)
+    hc <- hclust(parallelDist(t(ref_expr_matrix), threads=SPACEmapX.env$GLOBAL_NUM_THREADS), method=hclust_method)
     
     split_groups <- cutree(hc, k=num_groups)
     
@@ -1935,12 +1935,12 @@ split_references <- function(infercnv_obj,
         grp_counter = grp_counter + 1
         grp_name = sprintf("refgrp-%d", grp_counter)
         cell_names <- names(split_groups[split_groups == cut_group])
-        ref_groups[[grp_name]] <- which(colnames(infercnv_obj@expr.data) %in% cell_names)
+        ref_groups[[grp_name]] <- which(colnames(SPACEmapX_obj@expr.data) %in% cell_names)
     }
     
-    infercnv_obj@reference_grouped_cell_indices <- ref_groups
+    SPACEmapX_obj@reference_grouped_cell_indices <- ref_groups
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
@@ -1948,7 +1948,7 @@ split_references <- function(infercnv_obj,
 #'
 #' @description Set outliers to some upper or lower bound.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param out_method method for computing the outlier bounds (default: "average_bound", involving
 #'                   determining the range of values for each cell, and then taking the mean of those bounds.)
@@ -1957,13 +1957,13 @@ split_references <- function(infercnv_obj,
 #'
 #' @param upper_bound setting the upper bound for the data (default: NA, uses out_method above)
 #'
-#' @return infercnv_obj with data bounds set accordingly.
+#' @return SPACEmapX_obj with data bounds set accordingly.
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-remove_outliers_norm <- function(infercnv_obj,
+remove_outliers_norm <- function(SPACEmapX_obj,
                                  out_method="average_bound",
                                  lower_bound=NA,
                                  upper_bound=NA) {
@@ -1974,17 +1974,17 @@ remove_outliers_norm <- function(infercnv_obj,
                     "upper_bound:", upper_bound))
     
     
-    infercnv_obj@expr.data <- .remove_outliers_norm(data=infercnv_obj@expr.data,
+    SPACEmapX_obj@expr.data <- .remove_outliers_norm(data=SPACEmapX_obj@expr.data,
                                                     out_method=out_method,
                                                     lower_bound=lower_bound,
                                                     upper_bound=upper_bound)
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- remove_outliers_norm(infercnv_obj@.hspike, out_method, lower_bound, upper_bound)
+        SPACEmapX_obj@.hspike <- remove_outliers_norm(SPACEmapX_obj@.hspike, out_method, lower_bound, upper_bound)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -2058,30 +2058,30 @@ remove_outliers_norm <- function(infercnv_obj,
 #' @description Centers expression data across all genes for each cell, using the cell mean or median expression
 #' value as the center.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param method method to select the center of the cell expression value. (default: 'mean', options: 'mean,'median')
 #'
-#' @return infercnv_object
+#' @return SPACEmapX_object
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-center_cell_expr_across_chromosome <- function(infercnv_obj, method="mean") { # or median
+center_cell_expr_across_chromosome <- function(SPACEmapX_obj, method="mean") { # or median
     
     flog.info(paste("::center_smooth across chromosomes per cell"))
     
-    infercnv_obj@expr.data <- .center_columns(infercnv_obj@expr.data, method)
+    SPACEmapX_obj@expr.data <- .center_columns(SPACEmapX_obj@expr.data, method)
     
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- center_cell_expr_across_chromosome(infercnv_obj@.hspike, method)
+        SPACEmapX_obj@.hspike <- center_cell_expr_across_chromosome(SPACEmapX_obj@.hspike, method)
     }
     
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 #' @keywords internal
@@ -2112,35 +2112,35 @@ center_cell_expr_across_chromosome <- function(infercnv_obj, method="mean") { # 
 #'
 #' @description Filters out genes that have fewer than the corresponding mean value across all cell values.
 #'
-#' @param infercnv_obj  infercnv_object
+#' @param SPACEmapX_obj  SPACEmapX_object
 #'
 #' @param min_mean_expr_cutoff  the minimum mean value allowed for a gene to be retained in the expression matrix.
 #'
-#' @return infercnv_obj  the infercnv_object with lowly or unexpressed genes removed.
+#' @return SPACEmapX_obj  the SPACEmapX_object with lowly or unexpressed genes removed.
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-require_above_min_mean_expr_cutoff <- function(infercnv_obj, min_mean_expr_cutoff) {
+require_above_min_mean_expr_cutoff <- function(SPACEmapX_obj, min_mean_expr_cutoff) {
     
     flog.info(paste("::above_min_mean_expr_cutoff:Start", sep=""))
     
     
-    indices <-.below_min_mean_expr_cutoff(infercnv_obj@expr.data, min_mean_expr_cutoff)
+    indices <-.below_min_mean_expr_cutoff(SPACEmapX_obj@expr.data, min_mean_expr_cutoff)
     if (length(indices) > 0) {
         flog.info(sprintf("Removing %d genes from matrix as below mean expr threshold: %g",
                           length(indices), min_mean_expr_cutoff))
         
-        infercnv_obj <- remove_genes(infercnv_obj, indices)
+        SPACEmapX_obj <- remove_genes(SPACEmapX_obj, indices)
         
-        expr_dim = dim(infercnv_obj@expr.data)
+        expr_dim = dim(SPACEmapX_obj@expr.data)
         flog.info(sprintf("There are %d genes and %d cells remaining in the expr matrix.",
                           expr_dim[1], expr_dim[2]))
         
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -2166,21 +2166,21 @@ require_above_min_mean_expr_cutoff <- function(infercnv_obj, min_mean_expr_cutof
 #'
 #' @description Filters out genes that have fewer than specified number of cells expressing them.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param min_cells_per_gene int indicating number of cells required per gene for both obs and ref data
 #'
-#' @return infercnv_obj infercnv_object with corresponding genes removed.
+#' @return SPACEmapX_obj SPACEmapX_object with corresponding genes removed.
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-require_above_min_cells_ref <- function(infercnv_obj, min_cells_per_gene) {
+require_above_min_cells_ref <- function(SPACEmapX_obj, min_cells_per_gene) {
     
-    genes_passed = which(apply(infercnv_obj@expr.data, 1, function(x) { sum(x>0 & ! is.na(x)) >= min_cells_per_gene}))
+    genes_passed = which(apply(SPACEmapX_obj@expr.data, 1, function(x) { sum(x>0 & ! is.na(x)) >= min_cells_per_gene}))
     
-    num_genes_total = dim(infercnv_obj@expr.data)[1]
+    num_genes_total = dim(SPACEmapX_obj@expr.data)[1]
     num_removed = num_genes_total - length(genes_passed)
     if (num_removed > 0) {
         
@@ -2195,7 +2195,7 @@ require_above_min_cells_ref <- function(infercnv_obj, min_cells_per_gene) {
         }
         
         
-        infercnv_obj <- remove_genes(infercnv_obj, -1 * genes_passed)
+        SPACEmapX_obj <- remove_genes(SPACEmapX_obj, -1 * genes_passed)
         
         
     }
@@ -2205,7 +2205,7 @@ require_above_min_cells_ref <- function(infercnv_obj, min_cells_per_gene) {
         
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -2214,50 +2214,50 @@ require_above_min_cells_ref <- function(infercnv_obj, min_cells_per_gene) {
 #'
 #' @description Remove values that are too close to the reference cell expr average and are considered noise.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param threshold values within reference mean +- threshold are set to zero.
 #'
 #' @param noise_logistic uses a logistic (sigmoidal) function to noise removal.
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-clear_noise <- function(infercnv_obj, threshold, noise_logistic=FALSE) {
+clear_noise <- function(SPACEmapX_obj, threshold, noise_logistic=FALSE) {
     
     flog.info(paste("********* ::clear_noise:Start. threshold: ", threshold, sep=""))
     
     if (threshold == 0) {
-        return(infercnv_obj); # nothing to do
+        return(SPACEmapX_obj); # nothing to do
     }
     
-    if (has_reference_cells(infercnv_obj)) {
-        ref_idx = get_reference_grouped_cell_indices(infercnv_obj)
-        mean_ref_vals = mean(infercnv_obj@expr.data[,ref_idx])
+    if (has_reference_cells(SPACEmapX_obj)) {
+        ref_idx = get_reference_grouped_cell_indices(SPACEmapX_obj)
+        mean_ref_vals = mean(SPACEmapX_obj@expr.data[,ref_idx])
     } else {
         ## no reference
         ## use mean of all data
-        mean_ref_vals = mean(infercnv_obj@expr.data)
+        mean_ref_vals = mean(SPACEmapX_obj@expr.data)
     }
     
     if (noise_logistic) {
         
-        infercnv_obj <- depress_log_signal_midpt_val(infercnv_obj, mean_ref_vals, threshold)
+        SPACEmapX_obj <- depress_log_signal_midpt_val(SPACEmapX_obj, mean_ref_vals, threshold)
         
     } else {
         
-        infercnv_obj@expr.data <- .clear_noise(infercnv_obj@expr.data, threshold, center_pos=mean_ref_vals)
+        SPACEmapX_obj@expr.data <- .clear_noise(SPACEmapX_obj@expr.data, threshold, center_pos=mean_ref_vals)
     }
     
-    # if (! is.null(infercnv_obj@.hspike)) {
+    # if (! is.null(SPACEmapX_obj@.hspike)) {
     #     flog.info("-mirroring for hspike")
-    #     infercnv_obj@.hspike <- clear_noise(infercnv_obj@.hspike, threshold, noise_logistic)
+    #     SPACEmapX_obj@.hspike <- clear_noise(SPACEmapX_obj@.hspike, threshold, noise_logistic)
     # }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 #' @keywords internal
@@ -2283,30 +2283,30 @@ clear_noise <- function(infercnv_obj, threshold, noise_logistic=FALSE) {
 #' where sd_amplifier expands the range around the mean to be removed as noise.
 #' Data points defined as noise are set to zero.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param sd_amplifier multiplicative factor applied to the standard deviation to alter the noise
 #'                     range (default: 1.5)
 #'
 #' @param noise_logistic uses a logistic (sigmoidal) function to noise removal.
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-clear_noise_via_ref_mean_sd <- function(infercnv_obj, sd_amplifier=1.5, noise_logistic=FALSE) {
+clear_noise_via_ref_mean_sd <- function(SPACEmapX_obj, sd_amplifier=1.5, noise_logistic=FALSE) {
     
-    if (has_reference_cells(infercnv_obj)) {
-        ref_idx = get_reference_grouped_cell_indices(infercnv_obj)
+    if (has_reference_cells(SPACEmapX_obj)) {
+        ref_idx = get_reference_grouped_cell_indices(SPACEmapX_obj)
         flog.info("denoising using mean(normal) +- sd_amplifier * sd(normal) per gene per cell across all data")
     }
     else {
-        ref_idx = unlist(infercnv_obj@observation_grouped_cell_indices)
+        ref_idx = unlist(SPACEmapX_obj@observation_grouped_cell_indices)
         flog.info("-no reference cells specified... using mean and sd of all cells as proxy for denoising")
     }
-    vals = infercnv_obj@expr.data[,ref_idx]
+    vals = SPACEmapX_obj@expr.data[,ref_idx]
     
     mean_ref_vals = mean(vals)
     
@@ -2323,23 +2323,23 @@ clear_noise_via_ref_mean_sd <- function(infercnv_obj, sd_amplifier=1.5, noise_lo
     if (noise_logistic) {
         
         threshold = mean_ref_sd
-        infercnv_obj <- depress_log_signal_midpt_val(infercnv_obj, mean_ref_vals, threshold)
+        SPACEmapX_obj <- depress_log_signal_midpt_val(SPACEmapX_obj, mean_ref_vals, threshold)
         
     } else {
-        # smooth_matrix <- infercnv_obj@expr.data
+        # smooth_matrix <- SPACEmapX_obj@expr.data
         
         # smooth_matrix[smooth_matrix > lower_bound & smooth_matrix < upper_bound] = mean_ref_vals
-        infercnv_obj@expr.data[infercnv_obj@expr.data > lower_bound & infercnv_obj@expr.data < upper_bound] = mean_ref_vals
+        SPACEmapX_obj@expr.data[SPACEmapX_obj@expr.data > lower_bound & SPACEmapX_obj@expr.data < upper_bound] = mean_ref_vals
         
-        # infercnv_obj@expr.data <- smooth_matrix
+        # SPACEmapX_obj@expr.data <- smooth_matrix
     }
     
-    # if (! is.null(infercnv_obj@.hspike)) {
+    # if (! is.null(SPACEmapX_obj@.hspike)) {
     #     flog.info("-mirroring for hspike")
-    #     infercnv_obj@.hspike <- clear_noise_via_ref_mean_sd(infercnv_obj@.hspike, sd_amplifier, noise_logistic)
+    #     SPACEmapX_obj@.hspike <- clear_noise_via_ref_mean_sd(SPACEmapX_obj@.hspike, sd_amplifier, noise_logistic)
     # }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
@@ -2388,28 +2388,28 @@ clear_noise_via_ref_mean_sd <- function(infercnv_obj, sd_amplifier=1.5, noise_lo
 #' @description Smooth expression values for each cell across each chromosome by using a
 #' moving average with a window of specified length.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param window_length length of window (number of genes) for the moving average
 #'
 #' @param smooth_ends perform smoothing at the ends of the chromosomes (default: TRUE)
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-smooth_by_chromosome <- function(infercnv_obj, window_length, smooth_ends=TRUE) {
+smooth_by_chromosome <- function(SPACEmapX_obj, window_length, smooth_ends=TRUE) {
     
-    gene_chr_listing = infercnv_obj@gene_order[[C_CHR]]
+    gene_chr_listing = SPACEmapX_obj@gene_order[[C_CHR]]
     chrs = unlist(unique(gene_chr_listing))
     
     for (chr in chrs) {
         chr_genes_indices = which(gene_chr_listing == chr)
         flog.info(paste0("smooth_by_chromosome: chr: ",chr))
         
-        chr_data=infercnv_obj@expr.data[chr_genes_indices, , drop=FALSE]
+        chr_data=SPACEmapX_obj@expr.data[chr_genes_indices, , drop=FALSE]
         
         if (nrow(chr_data) > 1) {
             smoothed_chr_data = .smooth_window(data=chr_data,
@@ -2417,17 +2417,17 @@ smooth_by_chromosome <- function(infercnv_obj, window_length, smooth_ends=TRUE) 
             
             flog.debug(paste0("smoothed data: ", paste(dim(smoothed_chr_data), collapse=",")))
             
-            infercnv_obj@expr.data[chr_genes_indices, ] <- smoothed_chr_data
+            SPACEmapX_obj@expr.data[chr_genes_indices, ] <- smoothed_chr_data
         }
     }
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- smooth_by_chromosome(infercnv_obj@.hspike, window_length, smooth_ends)
+        SPACEmapX_obj@.hspike <- smooth_by_chromosome(SPACEmapX_obj@.hspike, window_length, smooth_ends)
     }
     
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 #' @keywords internal
@@ -2528,35 +2528,35 @@ smooth_by_chromosome <- function(infercnv_obj, window_length, smooth_ends=TRUE) 
     return(orig_obs_data)
 }
 
-smooth_by_chromosome_coordinates <- function(infercnv_obj, window_length) {
+smooth_by_chromosome_coordinates <- function(SPACEmapX_obj, window_length) {
     
-    gene_chr_listing = infercnv_obj@gene_order[[C_CHR]]
+    gene_chr_listing = SPACEmapX_obj@gene_order[[C_CHR]]
     chrs = unlist(unique(gene_chr_listing))
     
     for (chr in chrs) {
         chr_genes_indices = which(gene_chr_listing == chr)
         flog.info(paste0("smooth_by_chromosome: chr: ",chr))
         
-        chr_data=infercnv_obj@expr.data[chr_genes_indices, , drop=FALSE]
+        chr_data=SPACEmapX_obj@expr.data[chr_genes_indices, , drop=FALSE]
         
         if (nrow(chr_data) > 1) {
             smoothed_chr_data = .smooth_window_by_coordinates(data=chr_data,
                                                               window_length=window_length,
-                                                              genes=infercnv_obj@gene_order[which(infercnv_obj@gene_order$chr == chr) ,])
+                                                              genes=SPACEmapX_obj@gene_order[which(SPACEmapX_obj@gene_order$chr == chr) ,])
             
             flog.debug(paste0("smoothed data: ", paste(dim(smoothed_chr_data), collapse=",")))
             
-            infercnv_obj@expr.data[chr_genes_indices, ] <- smoothed_chr_data
+            SPACEmapX_obj@expr.data[chr_genes_indices, ] <- smoothed_chr_data
         }
     }
     
-    if (! is.null(infercnv_obj@.hspike)) {  ## for now not supported.
+    if (! is.null(SPACEmapX_obj@.hspike)) {  ## for now not supported.
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- smooth_by_chromosome_coordinates(infercnv_obj@.hspike, window_length=51)
+        SPACEmapX_obj@.hspike <- smooth_by_chromosome_coordinates(SPACEmapX_obj@.hspike, window_length=51)
     }
     
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 .smooth_window_by_coordinates <- function(data, window_length, genes) {
@@ -2662,42 +2662,42 @@ smooth_by_chromosome_coordinates <- function(infercnv_obj, window_length) {
 #'
 #' @description uses the simpler caTools:runmeans() to perform smoothing operations.
 #'
-#' @param infercnv_obj infercnv object
+#' @param SPACEmapX_obj SPACEmapX object
 #'
 #' @param window_length window length to use for smoothing.
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
 
-smooth_by_chromosome_runmeans <- function(infercnv_obj, window_length) {
+smooth_by_chromosome_runmeans <- function(SPACEmapX_obj, window_length) {
     
-    gene_chr_listing = infercnv_obj@gene_order[[C_CHR]]
+    gene_chr_listing = SPACEmapX_obj@gene_order[[C_CHR]]
     chrs = unlist(unique(gene_chr_listing))
     
     for (chr in chrs) {
         chr_genes_indices = which(gene_chr_listing == chr)
         flog.info(paste0("smooth_by_chromosome: chr: ",chr))
         
-        chr_data=infercnv_obj@expr.data[chr_genes_indices, , drop=FALSE]
+        chr_data=SPACEmapX_obj@expr.data[chr_genes_indices, , drop=FALSE]
         
         if (nrow(chr_data) > 1) {
             chr_data = apply(chr_data, 2, caTools::runmean, k=window_length)
             
-            infercnv_obj@expr.data[chr_genes_indices, ] <- chr_data
+            SPACEmapX_obj@expr.data[chr_genes_indices, ] <- chr_data
         }
     }
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- smooth_by_chromosome_runmeans(infercnv_obj@.hspike, window_length)
+        SPACEmapX_obj@.hspike <- smooth_by_chromosome_runmeans(SPACEmapX_obj@.hspike, window_length)
     }
     
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
@@ -2709,7 +2709,7 @@ smooth_by_chromosome_runmeans <- function(infercnv_obj, window_length) {
 #'
 #' @description Computes the mean of the upper and lower bound for the data across all cells.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @return (lower_bound, upper_bound)
 #'
@@ -2717,9 +2717,9 @@ smooth_by_chromosome_runmeans <- function(infercnv_obj, window_length) {
 #' @noRd
 #'
 
-get_average_bounds <- function (infercnv_obj) {
+get_average_bounds <- function (SPACEmapX_obj) {
     
-    return(.get_average_bounds(infercnv_obj@expr.data))
+    return(.get_average_bounds(SPACEmapX_obj@expr.data))
     
 }
 
@@ -2740,28 +2740,28 @@ get_average_bounds <- function (infercnv_obj) {
 
 #' @title log2xplus1()
 #'
-#' @description Computes log(x+1), updates infercnv_obj@expr.data
+#' @description Computes log(x+1), updates SPACEmapX_obj@expr.data
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-log2xplus1 <- function(infercnv_obj) {
+log2xplus1 <- function(SPACEmapX_obj) {
     
     flog.info("transforming log2xplus1()")
     
-    infercnv_obj@expr.data <- log2(infercnv_obj@expr.data + 1)
+    SPACEmapX_obj@expr.data <- log2(SPACEmapX_obj@expr.data + 1)
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- log2xplus1(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- log2xplus1(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -2770,85 +2770,85 @@ log2xplus1 <- function(infercnv_obj) {
 #' @title invert_log2xplus1()
 #'
 #' @description Computes 2^x - 1
-#' Updates infercnv_obj@expr.data
+#' Updates SPACEmapX_obj@expr.data
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-invert_log2xplus1 <- function(infercnv_obj) {
+invert_log2xplus1 <- function(SPACEmapX_obj) {
     
     flog.info("inverting log2xplus1()")
     
-    infercnv_obj@expr.data <- 2^infercnv_obj@expr.data - 1
+    SPACEmapX_obj@expr.data <- 2^SPACEmapX_obj@expr.data - 1
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- invert_log2xplus1(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- invert_log2xplus1(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
 #' @title invert_log2()
 #'
 #' @description Computes 2^x
-#' Updates infercnv_obj@expr.data
+#' Updates SPACEmapX_obj@expr.data
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-invert_log2 <- function(infercnv_obj) {
+invert_log2 <- function(SPACEmapX_obj) {
     
     flog.info("invert_log2(), computing 2^x")
     
-    infercnv_obj@expr.data <- 2^infercnv_obj@expr.data
+    SPACEmapX_obj@expr.data <- 2^SPACEmapX_obj@expr.data
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- invert_log2(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- invert_log2(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
 #' @title make_zero_NA()
 #'
 #' @description Converts zero to NA
-#' Updates infercnv_obj@expr.data
+#' Updates SPACEmapX_obj@expr.data
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-make_zero_NA <- function(infercnv_obj) {
+make_zero_NA <- function(SPACEmapX_obj) {
     
     flog.info("make_zero_NA()")
     
-    infercnv_obj@expr.data <- infercnv_obj@expr.data[infercnv_obj@expr.data == 0] <- NA
+    SPACEmapX_obj@expr.data <- SPACEmapX_obj@expr.data[SPACEmapX_obj@expr.data == 0] <- NA
     
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- make_zero_NA(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- make_zero_NA(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -2860,15 +2860,15 @@ make_zero_NA <- function(infercnv_obj) {
 #'
 #' Note, reference cell gene expression values will be centered at zero after this operation.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-transform_to_reference_based_Zscores <- function(infercnv_obj) {
+transform_to_reference_based_Zscores <- function(SPACEmapX_obj) {
 
     ## center and convert to z-scores
     flog.info(paste("::center_and_Zscore_conversion", sep=""))
@@ -2878,9 +2878,9 @@ transform_to_reference_based_Zscores <- function(infercnv_obj) {
     ## centering and z-scores based on the reference (normal) cells:
 
     ## ref data represent the null distribution
-    ref_idx = get_reference_grouped_cell_indices(infercnv_obj)
+    ref_idx = get_reference_grouped_cell_indices(SPACEmapX_obj)
     
-    ref_data = infercnv_obj@expr.data[,ref_idx]
+    ref_data = SPACEmapX_obj@expr.data[,ref_idx]
     
     gene_ref_mean = apply(ref_data, 1, function(x) {mean(x, na.rm=TRUE)})
     gene_ref_sd = apply(ref_data, 1, function(x) {sd(x, na.rm=TRUE)})
@@ -2889,17 +2889,17 @@ transform_to_reference_based_Zscores <- function(infercnv_obj) {
     gene_ref_sd = pmax(gene_ref_sd, gene_ref_mean)
     
     ## center all genes at the ref (normal) center:
-    infercnv_obj@expr.data = sweep(infercnv_obj@expr.data, 1, gene_ref_mean, FUN="-")
+    SPACEmapX_obj@expr.data = sweep(SPACEmapX_obj@expr.data, 1, gene_ref_mean, FUN="-")
     
     ## convert to z-scores based on the ref (normal) distribution
-    infercnv_obj@expr.data = sweep(infercnv_obj@expr.data, 1, gene_ref_sd, FUN="/") # make all data z-scores based on the ref data distribution.
+    SPACEmapX_obj@expr.data = sweep(SPACEmapX_obj@expr.data, 1, gene_ref_sd, FUN="/") # make all data z-scores based on the ref data distribution.
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- transform_to_reference_based_Zscores(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- transform_to_reference_based_Zscores(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -2908,26 +2908,26 @@ transform_to_reference_based_Zscores <- function(infercnv_obj) {
 #'
 #' @description mean-center all gene expression values across all cells
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-mean_center_gene_expr <- function(infercnv_obj) {
+mean_center_gene_expr <- function(SPACEmapX_obj) {
     
     flog.info(paste("::centering", sep=""))
     
-    infercnv_obj@expr.data <- sweep(infercnv_obj@expr.data, 1, rowMeans(infercnv_obj@expr.data, na.rm=TRUE), FUN="-")
+    SPACEmapX_obj@expr.data <- sweep(SPACEmapX_obj@expr.data, 1, rowMeans(SPACEmapX_obj@expr.data, na.rm=TRUE), FUN="-")
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- mean_center_gene_expr(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- mean_center_gene_expr(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
@@ -2935,7 +2935,7 @@ mean_center_gene_expr <- function(infercnv_obj) {
 #'
 #' @description Retrieves the matrix indices for the columns correspoinding to the reference cells.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @return vector of column indices
 #'
@@ -2943,9 +2943,9 @@ mean_center_gene_expr <- function(infercnv_obj) {
 #' @noRd
 #'
 
-get_reference_grouped_cell_indices <- function(infercnv_obj) {
+get_reference_grouped_cell_indices <- function(SPACEmapX_obj) {
     
-    return( unlist(infercnv_obj@reference_grouped_cell_indices) )
+    return( unlist(SPACEmapX_obj@reference_grouped_cell_indices) )
     
 }
 
@@ -2954,29 +2954,29 @@ get_reference_grouped_cell_indices <- function(infercnv_obj) {
 #'
 #' @description Assumes centered at zero and sets bounds to +- threshold value.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param threshold value to threshold the data
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-apply_max_threshold_bounds <- function(infercnv_obj, threshold) {
+apply_max_threshold_bounds <- function(SPACEmapX_obj, threshold) {
     
     flog.info(paste("::process_data:setting max centered expr, threshold set to: +/-: ", threshold))
     
-    infercnv_obj@expr.data[infercnv_obj@expr.data > threshold] <- threshold
-    infercnv_obj@expr.data[infercnv_obj@expr.data < (-1 * threshold)] <- -1 * threshold
+    SPACEmapX_obj@expr.data[SPACEmapX_obj@expr.data > threshold] <- threshold
+    SPACEmapX_obj@expr.data[SPACEmapX_obj@expr.data < (-1 * threshold)] <- -1 * threshold
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- apply_max_threshold_bounds(infercnv_obj@.hspike, threshold)
+        SPACEmapX_obj@.hspike <- apply_max_threshold_bounds(SPACEmapX_obj@.hspike, threshold)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
@@ -2984,26 +2984,26 @@ apply_max_threshold_bounds <- function(infercnv_obj, threshold) {
 #'
 #' @description Removes genes that are within window_length/2 of the ends of each chromosome.
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param window_length length of the window to use.
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-remove_genes_at_ends_of_chromosomes <- function(infercnv_obj, window_length) {
+remove_genes_at_ends_of_chromosomes <- function(SPACEmapX_obj, window_length) {
     
     contig_tail = (window_length - 1) / 2
     
     remove_indices <- c()
-    gene_chr_listing = infercnv_obj@gene_order[[C_CHR]]
+    gene_chr_listing = SPACEmapX_obj@gene_order[[C_CHR]]
     chrs = unlist(unique(gene_chr_listing))
     for (chr in chrs){
                                         #flog.info(paste("::process_data:Remove tail contig ",chr, ".", sep=""))
-        remove_chr <- .remove_tails(infercnv_obj@expr.data,
+        remove_chr <- .remove_tails(SPACEmapX_obj@expr.data,
                                     which(gene_chr_listing == chr),
                                     contig_tail)
         
@@ -3014,14 +3014,14 @@ remove_genes_at_ends_of_chromosomes <- function(infercnv_obj, window_length) {
     }
     if (length(remove_indices) > 0){
         
-        infercnv_obj = remove_genes(infercnv_obj, remove_indices)
+        SPACEmapX_obj = remove_genes(SPACEmapX_obj, remove_indices)
         
         flog.info(paste("::process_data:Remove genes at chr ends, ",
                         "new dimensions (r,c) = ",
-                        paste(dim(infercnv_obj@expr.data), collapse=","),
-                        " Total=", sum(infercnv_obj@expr.data, na.rm=TRUE),
-                        " Min=", min(infercnv_obj@expr.data, na.rm=TRUE),
-                        " Max=", max(infercnv_obj@expr.data, na.rm=TRUE),
+                        paste(dim(SPACEmapX_obj@expr.data), collapse=","),
+                        " Total=", sum(SPACEmapX_obj@expr.data, na.rm=TRUE),
+                        " Min=", min(SPACEmapX_obj@expr.data, na.rm=TRUE),
+                        " Max=", max(SPACEmapX_obj@expr.data, na.rm=TRUE),
                         ".", sep=""))
         
     }
@@ -3031,12 +3031,12 @@ remove_genes_at_ends_of_chromosomes <- function(infercnv_obj, window_length) {
     }
     
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- remove_genes_at_ends_of_chromosomes(infercnv_obj@.hspike, window_length)
+        SPACEmapX_obj@.hspike <- remove_genes_at_ends_of_chromosomes(SPACEmapX_obj@.hspike, window_length)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -3048,26 +3048,26 @@ remove_genes_at_ends_of_chromosomes <- function(infercnv_obj, window_length) {
 #' For single cell data, a typical normalization factor is 1e5, providing counts per 100k total counts.
 #' If a normalization factor is not provided, the median lib size is used.:
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param normalize_factor  total counts to scale the normalization to (default: NA, computed as described above)
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-normalize_counts_by_seq_depth <- function(infercnv_obj, normalize_factor=NA) {
+normalize_counts_by_seq_depth <- function(SPACEmapX_obj, normalize_factor=NA) {
     
-    data <- infercnv_obj@expr.data
+    data <- SPACEmapX_obj@expr.data
     
     normalized_data <- .normalize_data_matrix_by_seq_depth(data, normalize_factor)
     
     
-    infercnv_obj@expr.data <- normalized_data
+    SPACEmapX_obj@expr.data <- normalized_data
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -3116,69 +3116,69 @@ normalize_counts_by_seq_depth <- function(infercnv_obj, normalize_factor=NA) {
 #' as per
 #' https://en.wikipedia.org/wiki/Anscombe_transform
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-anscombe_transform <- function(infercnv_obj) {
+anscombe_transform <- function(SPACEmapX_obj) {
     
-    infercnv_obj@expr.data <- 2 * sqrt(infercnv_obj@expr.data + 3/8)
+    SPACEmapX_obj@expr.data <- 2 * sqrt(SPACEmapX_obj@expr.data + 3/8)
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- anscombe_transform(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- anscombe_transform(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
 #' @keywords internal
 #' @noRd
 #'
-add_pseudocount <- function(infercnv_obj, pseudocount) {
+add_pseudocount <- function(SPACEmapX_obj, pseudocount) {
     
     flog.info(sprintf("Adding pseudocount: %g", pseudocount))
     
-    infercnv_obj@expr.data = infercnv_obj@expr.data + pseudocount
+    SPACEmapX_obj@expr.data = SPACEmapX_obj@expr.data + pseudocount
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- add_pseudocount(infercnv_obj@.hspike, pseudocount)
+        SPACEmapX_obj@.hspike <- add_pseudocount(SPACEmapX_obj@.hspike, pseudocount)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
-#' @title scale_infercnv_expr
+#' @title scale_SPACEmapX_expr
 #'
 #' @description performs scaling to expression values for each cell,
 #' assigning all values to a standard normal centered at zero.
 #'
-#' @param infercnv_obj infercnv object
+#' @param SPACEmapX_obj SPACEmapX object
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-scale_infercnv_expr <- function(infercnv_obj) {
+scale_SPACEmapX_expr <- function(SPACEmapX_obj) {
     
     flog.info("-scaling expr data")
-    infercnv_obj@expr.data = t(scale(t(infercnv_obj@expr.data)))
+    SPACEmapX_obj@expr.data = t(scale(t(SPACEmapX_obj@expr.data)))
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- scale_infercnv_expr(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- scale_SPACEmapX_expr(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
 }
 
 
@@ -3187,23 +3187,23 @@ scale_infercnv_expr <- function(infercnv_obj) {
 #' @noRd
 #'
 
-cross_cell_normalize <- function(infercnv_obj) {
+cross_cell_normalize <- function(SPACEmapX_obj) {
     
     ## using upper quartile normalization
     
     flog.info("-cross cell normalization")
     
-    upper_quart = apply(infercnv_obj@expr.data, 2, quantile, probs=0.75)
+    upper_quart = apply(SPACEmapX_obj@expr.data, 2, quantile, probs=0.75)
     mean_upper_quart = mean(upper_quart)
-    infercnv_obj@expr.data = sweep(infercnv_obj@expr.data, 2, mean_upper_quart/upper_quart, "*")
+    SPACEmapX_obj@expr.data = sweep(SPACEmapX_obj@expr.data, 2, mean_upper_quart/upper_quart, "*")
     
     
-    if (! is.null(infercnv_obj@.hspike)) {
+    if (! is.null(SPACEmapX_obj@.hspike)) {
         flog.info("-mirroring for hspike")
-        infercnv_obj@.hspike <- cross_cell_normalize(infercnv_obj@.hspike)
+        SPACEmapX_obj@.hspike <- cross_cell_normalize(SPACEmapX_obj@.hspike)
     }
     
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
     
 }
@@ -3215,33 +3215,33 @@ cross_cell_normalize <- function(infercnv_obj) {
 #' @description Recomputes hierarchical clustering for subclusters
 #'
 #'
-#' @param infercnv_obj infercnv_object
+#' @param SPACEmapX_obj SPACEmapX_object
 #'
 #' @param hclust_method clustering method to use (default: 'complete')
 #'
-#' @return infercnv_obj
+#' @return SPACEmapX_obj
 #'
 #' @keywords internal
 #' @noRd
 #'
 
-.redo_hierarchical_clustering <- function(infercnv_obj, hclust_method) {
+.redo_hierarchical_clustering <- function(SPACEmapX_obj, hclust_method) {
 
-    subclusters = infercnv_obj@tumor_subclusters$subclusters
+    subclusters = SPACEmapX_obj@tumor_subclusters$subclusters
 
     for (grp_name in names(subclusters)) {
 
         grp_cell_idx = unlist(subclusters[[grp_name]], recursive=TRUE)
         grp_cell_idx = grp_cell_idx[order(grp_cell_idx)] # retain relative ordering in the expr matrix
         
-        grp_expr_data = infercnv_obj@expr.data[, grp_cell_idx, drop=FALSE]
+        grp_expr_data = SPACEmapX_obj@expr.data[, grp_cell_idx, drop=FALSE]
         
-        hc <- hclust(parallelDist(t(grp_expr_data), threads=infercnv.env$GLOBAL_NUM_THREADS), method=hclust_method)
+        hc <- hclust(parallelDist(t(grp_expr_data), threads=SPACEmapX.env$GLOBAL_NUM_THREADS), method=hclust_method)
 
-        infercnv_obj@tumor_subclusters$hc[[grp_name]] <- hc
+        SPACEmapX_obj@tumor_subclusters$hc[[grp_name]] <- hc
     }
 
-    return(infercnv_obj)
+    return(SPACEmapX_obj)
     
 }
 
@@ -3308,17 +3308,17 @@ compareNA <- function(v1,v2) {
     expected_file_names = vector("character", 21)
     step_i = 1
 
-    # 1 _incoming_data.infercnv_obj
+    # 1 _incoming_data.SPACEmapX_obj
     relevant_args[[step_i]] = c("chr_exclude", "max_cells_per_group", "min_max_counts_per_cell", "counts_md5")
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_incoming_data.infercnv_obj", step_i))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_incoming_data.SPACEmapX_obj", step_i))
     step_i = step_i + 1
 
-    # 2 _reduced_by_cutoff.infercnv_obj
+    # 2 _reduced_by_cutoff.SPACEmapX_obj
     relevant_args[[step_i]] = c("cutoff", "min_cells_per_gene")
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_reduced_by_cutoff.infercnv_obj", step_i))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_reduced_by_cutoff.SPACEmapX_obj", step_i))
     step_i = step_i + 1
 
-    # 3 _normalized_by_depth%s.infercnv_obj
+    # 3 _normalized_by_depth%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("HMM")
     if (run_arguments$HMM) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "HMM_type") 
@@ -3327,107 +3327,107 @@ compareNA <- function(v1,v2) {
         }
     }
     resume_file_token = ifelse((run_arguments$HMM), paste0("HMM", run_arguments$HMM_type), "")
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_normalized_by_depth%s.infercnv_obj", step_i, resume_file_token))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_normalized_by_depth%s.SPACEmapX_obj", step_i, resume_file_token))
     step_i = step_i + 1
 
-    # 4 _logtransformed%s.infercnv_obj
+    # 4 _logtransformed%s.SPACEmapX_obj
     relevant_args[[step_i]] = c()
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_logtransformed%s.infercnv_obj", step_i, resume_file_token))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_logtransformed%s.SPACEmapX_obj", step_i, resume_file_token))
     step_i = step_i + 1
 
-    # 5 _scaled%s.infercnv_obj
+    # 5 _scaled%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("scale_data")
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_scaled%s.infercnv_obj", step_i, resume_file_token))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_scaled%s.SPACEmapX_obj", step_i, resume_file_token))
     step_i = step_i + 1
 
-    # 6 _split_%sf_refs%s.infercnv_obj
+    # 6 _split_%sf_refs%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("num_ref_groups")
     if (!is.null(run_arguments$num_ref_groups)) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "hclust_method")
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_split_%sf_refs%s.infercnv_obj", step_i, resume_file_token, run_arguments$num_ref_groups))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_split_%sf_refs%s.SPACEmapX_obj", step_i, resume_file_token, run_arguments$num_ref_groups))
     }
     step_i = step_i + 1
 
-    # 7 _tumor_subclusters%s.%s.infercnv_obj
+    # 7 _tumor_subclusters%s.%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("analysis_mode", "tumor_subcluster_partition_method")
     if (run_arguments$analysis_mode == 'subclusters' & run_arguments$tumor_subcluster_partition_method == 'random_trees') {
         resume_file_token = paste0(resume_file_token, ".rand_trees")
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "hclust_method", "tumor_subcluster_pval", "cluster_by_groups")
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_tumor_subclusters%s.%s.infercnv_obj", step_i, resume_file_token, run_arguments$tumor_subcluster_partition_method))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_tumor_subclusters%s.%s.SPACEmapX_obj", step_i, resume_file_token, run_arguments$tumor_subcluster_partition_method))
     }
     step_i = step_i + 1
 
-    # 8 _remove_ref_avg_from_obs_logFC%s.infercnv_obj
+    # 8 _remove_ref_avg_from_obs_logFC%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("ref_subtract_use_mean_bounds")
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_remove_ref_avg_from_obs_logFC%s.infercnv_obj", step_i, resume_file_token))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_remove_ref_avg_from_obs_logFC%s.SPACEmapX_obj", step_i, resume_file_token))
     step_i = step_i + 1
 
-    # 9 _apply_max_centered_expr_threshold%s.infercnv_obj
+    # 9 _apply_max_centered_expr_threshold%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("max_centered_threshold")
     if(!is.na(run_arguments$max_centered_threshold)) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "max_centered_threshold")
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_apply_max_centered_expr_threshold%s.infercnv_obj", step_i, resume_file_token))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_apply_max_centered_expr_threshold%s.SPACEmapX_obj", step_i, resume_file_token))
     }
     step_i = step_i + 1
 
-    # 10 _smoothed_by_chr%s.infercnv_obj
+    # 10 _smoothed_by_chr%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("smooth_method", "window_length")
     if (run_arguments$smooth_method == 'pyramidinal') {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "smooth_ends")
     }
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_smoothed_by_chr%s.infercnv_obj", step_i, resume_file_token))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_smoothed_by_chr%s.SPACEmapX_obj", step_i, resume_file_token))
     step_i = step_i + 1
 
-    # 11 _recentered_cells_by_chr%s.infercnv_obj
+    # 11 _recentered_cells_by_chr%s.SPACEmapX_obj
     relevant_args[[step_i]] = c()
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_recentered_cells_by_chr%s.infercnv_obj", step_i, resume_file_token))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_recentered_cells_by_chr%s.SPACEmapX_obj", step_i, resume_file_token))
     step_i = step_i + 1
 
-    # 12 _remove_ref_avg_from_obs_adjust%s.infercnv_obj
+    # 12 _remove_ref_avg_from_obs_adjust%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("ref_subtract_use_mean_bounds")
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_remove_ref_avg_from_obs_adjust%s.infercnv_obj", step_i, resume_file_token))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_remove_ref_avg_from_obs_adjust%s.SPACEmapX_obj", step_i, resume_file_token))
     step_i = step_i + 1
 
-    # 13 _remove_gene_at_chr_ends%s.infercnv_obj
+    # 13 _remove_gene_at_chr_ends%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("remove_genes_at_chr_ends")
     if (run_arguments$remove_genes_at_chr_ends == TRUE) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "window_length")
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_remove_gene_at_chr_ends%s.infercnv_obj", step_i, resume_file_token))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_remove_gene_at_chr_ends%s.SPACEmapX_obj", step_i, resume_file_token))
     }
     step_i = step_i + 1
 
-    # 14 _invert_log_transform%s.infercnv_obj
+    # 14 _invert_log_transform%s.SPACEmapX_obj
     relevant_args[[step_i]] = c()
-    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_invert_log_transform%s.infercnv_obj", step_i, resume_file_token))
+    expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_invert_log_transform%s.SPACEmapX_obj", step_i, resume_file_token))
     step_i = step_i + 1
 
-    # 15 _tumor_subclusters%s.infercnv_obj
+    # 15 _tumor_subclusters%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("analysis_mode", "tumor_subcluster_partition_method", "z_score_filter")
     if (run_arguments$analysis_mode == 'subclusters' & run_arguments$tumor_subcluster_partition_method != 'random_trees') {
         resume_file_token = paste0(resume_file_token, '.', run_arguments$tumor_subcluster_partition_method)
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "k_nn", "leiden_resolution", "tumor_subcluster_pval", "leiden_method", "leiden_function", "leiden_method_per_chr", "leiden_function_per_chr", "leiden_resolution_per_chr", "per_chr_hmm_subclusters", "per_chr_hmm_subclusters_references", "hclust_method", "cluster_by_groups") 
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_tumor_subclusters%s.infercnv_obj", step_i, resume_file_token))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_tumor_subclusters%s.SPACEmapX_obj", step_i, resume_file_token))
     }
     else if (run_arguments$analysis_mode != 'subclusters') {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "tumor_subcluster_pval", "hclust_method", "cluster_by_groups")
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_no_subclustering%s.infercnv_obj", step_i, resume_file_token))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_no_subclustering%s.SPACEmapX_obj", step_i, resume_file_token))
     }
     step_i = step_i + 1
 
-    # 16 _remove_outlier%s.infercnv_obj
+    # 16 _remove_outlier%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("prune_outliers")
     if (run_arguments$prune_outliers) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "outlier_method_bound", "outlier_lower_bound", "outlier_upper_bound")
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_remove_outlier%s.infercnv_obj", step_i, resume_file_token))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_remove_outlier%s.SPACEmapX_obj", step_i, resume_file_token))
     }
     step_i = step_i + 1
 
-    # 17 _HMM_pred%s.infercnv_obj
+    # 17 _HMM_pred%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("HMM")
     if (run_arguments$HMM) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "HMM_type", "analysis_mode", "HMM_transition_prob", "HMM_report_by")
         hmm_resume_file_token = paste0(resume_file_token, ".hmm_mode-", run_arguments$analysis_mode)
-        # hmm.infercnv_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred%s.infercnv_obj", step_i, hmm_resume_file_token))  ########
+        # hmm.SPACEmapX_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred%s.SPACEmapX_obj", step_i, hmm_resume_file_token))  ########
         if (run_arguments$analysis_mode == 'subclusters' && run_arguments$tumor_subcluster_partition_method == 'random_trees') {
             relevant_args[[step_i]] = c(relevant_args[[step_i]], "hclust_method")
         }
@@ -3439,7 +3439,7 @@ compareNA <- function(v1,v2) {
         else {
             relevant_args[[step_i]] = c(relevant_args[[step_i]], "HMM_i3_pval", "HMM_i3_use_KS")
         }
-        expected_file_names[[step_i]] = hmm.infercnv_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred%s.infercnv_obj", step_i, hmm_resume_file_token))
+        expected_file_names[[step_i]] = hmm.SPACEmapX_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred%s.SPACEmapX_obj", step_i, hmm_resume_file_token))
     }
     step_i = step_i + 1
 
@@ -3448,45 +3448,45 @@ compareNA <- function(v1,v2) {
     if (run_arguments$HMM == TRUE & run_arguments$BayesMaxPNormal > 0) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "diagnostics", "reassignCNVs")
         # mcmc_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.mcmc_obj", step_i, hmm_resume_file_token))
-        # mcmc.infercnv_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.Pnorm_%g.infercnv_obj", step_i, hmm_resume_file_token, BayesMaxPNormal))
+        # mcmc.SPACEmapX_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.Pnorm_%g.SPACEmapX_obj", step_i, hmm_resume_file_token, BayesMaxPNormal))
         # expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.mcmc_obj", step_i, hmm_resume_file_token)), 
         expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.mcmc_obj", step_i, hmm_resume_file_token))
     }
     step_i = step_i + 1
 
-    # 19 _HMM_pred.Bayes_Net%s.Pnorm_%g.infercnv_obj
+    # 19 _HMM_pred.Bayes_Net%s.Pnorm_%g.SPACEmapX_obj
     relevant_args[[step_i]] = c("HMM", "BayesMaxPNormal")
     if (run_arguments$HMM == TRUE & run_arguments$BayesMaxPNormal > 0) {
         # relevant_args[[step_i]] = c(relevant_args[[step_i]], "diagnostics", "reassignCNVs")
         # mcmc_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.mcmc_obj", step_i, hmm_resume_file_token))
-        # mcmc.infercnv_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.Pnorm_%g.infercnv_obj", step_i, hmm_resume_file_token, BayesMaxPNormal))
+        # mcmc.SPACEmapX_obj_file = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.Pnorm_%g.SPACEmapX_obj", step_i, hmm_resume_file_token, BayesMaxPNormal))
         # expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.mcmc_obj", step_i, hmm_resume_file_token)), 
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.Pnorm_%g.infercnv_obj", step_i, hmm_resume_file_token, run_arguments$BayesMaxPNormal))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.Bayes_Net%s.Pnorm_%g.SPACEmapX_obj", step_i, hmm_resume_file_token, run_arguments$BayesMaxPNormal))
     }
     step_i = step_i + 1
 
-    # 20 _HMM_pred.repr_intensities%s.Pnorm_%g.infercnv_obj
+    # 20 _HMM_pred.repr_intensities%s.Pnorm_%g.SPACEmapX_obj
     relevant_args[[step_i]] = c("HMM")
     if (run_arguments$HMM) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "BayesMaxPNormal")
-        # hmm.infercnv_obj_file = file.path(out_dir, sprintf("%02d_HMM_pred.repr_intensities%s.Pnorm_%g.infercnv_obj", step_i, hmm_resume_file_token, BayesMaxPNormal))
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.repr_intensities%s.Pnorm_%g.infercnv_obj", step_i, hmm_resume_file_token, run_arguments$BayesMaxPNormal))
+        # hmm.SPACEmapX_obj_file = file.path(out_dir, sprintf("%02d_HMM_pred.repr_intensities%s.Pnorm_%g.SPACEmapX_obj", step_i, hmm_resume_file_token, BayesMaxPNormal))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_HMM_pred.repr_intensities%s.Pnorm_%g.SPACEmapX_obj", step_i, hmm_resume_file_token, run_arguments$BayesMaxPNormal))
     }
     step_i = step_i + 1
 
-    # 21 _mask_nonDE%s.infercnv_obj
+    # 21 _mask_nonDE%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("mask_nonDE_genes")
     if (run_arguments$mask_nonDE_genes) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "require_DE_all_normals", "test.use", "mask_nonDE_pval")
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_mask_nonDE%s.infercnv_obj", step_i, resume_file_token))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_mask_nonDE%s.SPACEmapX_obj", step_i, resume_file_token))
     }
     step_i = step_i + 1
 
-    # 22 _denoise%s.NF_%s.SD_%g.NL_%s.infercnv_obj
+    # 22 _denoise%s.NF_%s.SD_%g.NL_%s.SPACEmapX_obj
     relevant_args[[step_i]] = c("denoise")
     if (run_arguments$denoise) {
         relevant_args[[step_i]] = c(relevant_args[[step_i]], "noise_filter", "sd_amplifier", "noise_logistic")
-        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_denoise%s.NF_%s.SD_%g.NL_%s.infercnv_obj", step_i, resume_file_token, run_arguments$noise_filter, run_arguments$sd_amplifier, run_arguments$noise_logistic))
+        expected_file_names[[step_i]] = file.path(run_arguments$out_dir, sprintf("%02d_denoise%s.NF_%s.SD_%g.NL_%s.SPACEmapX_obj", step_i, resume_file_token, run_arguments$noise_filter, run_arguments$sd_amplifier, run_arguments$noise_logistic))
     }
     step_i = step_i + 1
 
