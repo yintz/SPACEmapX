@@ -1,4 +1,4 @@
-loadSTdat <- function(kk) {
+loadSTdata <- function(kk) {
   # check it has more than 3 columns
   if (ncol(kk) < 3) {
     stop("Error：dataframe needs at least 3 columns sampleID, ExpressionMatrixLocation and HistologyFileLocation）！")
