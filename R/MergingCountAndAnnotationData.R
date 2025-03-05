@@ -14,10 +14,15 @@ MergingCountAndAnnotationData <- function(SectionName, InputAnnotationFile, Inpu
   MergedAnnotationsandCounts <- inner_join(formerge, InputCountFile)
   MergedAnnotationsandCounts <- remove_rownames(MergedAnnotationsandCounts)
   MergedAnnotationsandCounts <- column_to_rownames(MergedAnnotationsandCounts, "Barcode")
-  str(MergedAnnotationsandCounts)  # 查看数据类型
-  head(MergedAnnotationsandCounts) # 查看前几行数据
+  #str(MergedAnnotationsandCounts)  # 查看数据类型
+  #head(MergedAnnotationsandCounts) # 查看前几行数据
   print("ok1")
-  MergedAnnotationsandCounts$Total <- rowSums(MergedAnnotationsandCounts[, sapply(MergedAnnotationsandCounts, is.numeric), drop = FALSE], na.rm = TRUE)
+  print(str(MergedAnnotationsandCounts))  # 查看数据类型
+  MergedAnnotationsandCounts$Total <- rowSums(
+  MergedAnnotationsandCounts[, sapply(MergedAnnotationsandCounts, is.numeric), drop = FALSE],
+  na.rm = TRUE
+)
+  
   #MergedAnnotationsandCounts$Total <- rowSums(MergedAnnotationsandCounts)
   summary(MergedAnnotationsandCounts$Total)
   if (!"Total" %in% colnames(MergedAnnotationsandCounts)) {
@@ -25,6 +30,7 @@ MergingCountAndAnnotationData <- function(SectionName, InputAnnotationFile, Inpu
 }
   print("ok2")
   MergedAnnotationsandCounts <- MergedAnnotationsandCounts %>% filter(Total >= 500)
+   print("ok3")
   MergedAnnotationsandCounts <- select(MergedAnnotationsandCounts, -Total)
   MergedAnnotationsandCounts <- as.data.frame(t(MergedAnnotationsandCounts))
   MergedAnnotationsandCounts <- MergedAnnotationsandCounts[,colSums(is.na(MergedAnnotationsandCounts))<nrow(MergedAnnotationsandCounts)]
