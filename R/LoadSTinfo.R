@@ -5,7 +5,7 @@ LoadSTinfo <- function(file_path) {
   }
   
   # read csv file and first row as column names
-  data <- read.csv(file_path, header = TRUE, stringsAsFactors = FALSE)
+  data <- read.csv(file_path, header = TRUE, stringsAsFactors = FALSE,fill =TRUE)
   
   # return
   return(data)
