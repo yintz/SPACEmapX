@@ -29,7 +29,7 @@ MergingCountAndAnnotationData <- function(SectionName, InputAnnotationFile, Inpu
   stop("Error: 'Total' column not found after rowSums() calculation!")
 }
   print("ok2")
-  MergedAnnotationsandCounts <- MergedAnnotationsandCounts %>% filter(Total >= 500)
+  MergedAnnotationsandCounts <- MergedAnnotationsandCounts %>% filter(MergedAnnotationsandCounts$Total >= 500)
    print("ok3")
   MergedAnnotationsandCounts <- select(MergedAnnotationsandCounts, -Total)
   MergedAnnotationsandCounts <- as.data.frame(t(MergedAnnotationsandCounts))
