@@ -34,7 +34,7 @@ ShowTwigSpotsList <- function(...){
     Node5<-subset(Node4,Node4$V1==unique(Node4$V1)[i])
     colnames(Node5)<-c("no","Barcode","Twig")
     Node6<-Node5[,c(2,3)]
-    write.csv(Node6, paste("FFPE_V2_Paitent_",unique(Node4$V1)[i],"_",Node4[1,3],".csv", sep = ""),row.names = FALSE)
+    write.csv(Node6, paste("FFPE_V2_Patient_",unique(Node4$V1)[i],"_",Node4[1,3],".csv", sep = ""),row.names = FALSE)
     print("i")
     print(i)
   }
