@@ -61,10 +61,11 @@ ShowTwigSectionName(TrigID)
 
 This package is designed to work with Visium Fresh Frozen, FFPE V1,V2 data only.
 
-If you would like a represetative ST test dataset, please try these data [from Erickson et al, Nature 2022; https://www.nature.com/articles/s41586-022-05023-2]. 
+If you would like a representative ST test dataset, please try these data [from Erickson et al, Nature 2022; https://www.nature.com/articles/s41586-022-05023-2]. 
 [MendeleyRepository](https://data.mendeley.com/v1/datasets/svw96g68dv/draft?a=3f263217-2bd3-4a3c-8125-8c517c3a9e29).
 
 For more ST data, you can also go to 10X website to download [https://www.10xgenomics.com/datasets?query=&page=1&configure%5BhitsPerPage%5D=50&configure%5BmaxValuesPerFacet%5D=1000&refinementList%5Bproduct.name%5D%5B0%5D=Spatial%20Gene%20Expression&refinementList%5Bspecies%5D%5B0%5D=Human&refinementList%5Bchemistry.version%5D%5B0%5D=2].
 
 
 # Funding 
+Cancer Research UK (CRUK) #C57899/A25812 "Spatial Prostate Assessment and Circulating Environment – The SPACE Study"
