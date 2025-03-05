@@ -1,5 +1,4 @@
 <img src="https://www.nds.ox.ac.uk/images/logos/secondary-logo" height="75" /> <img src="https://www.nds.ox.ac.uk/images/logos/primary-logo" height="75"/> 
-![image](https://github.com/user-attachments/assets/bf48b66b-97d3-4010-86dc-e9b989849c83)
 
 
 
@@ -14,7 +13,10 @@
 [![](https://img.shields.io/badge/SPACEmapX-version0.99-blue.svg)](https://github.com/yintz/SPACEmapX/releases)[![](https://img.shields.io/github/last-commit/yintz/SPACEmapX.svg)](https://github.com/yintz/SPACEmapX/commits/main)
 
 
-# SPACEMapX - Spatial Phylogenetic Analysis and Clonal Evolution: MAPping the lethal clone (X)
+# SPACEMapX - Spatial Phylogenetic Analysis and Clonal Evolution: MAPping the lethal clone (X) 
+# ![image](https://github.com/user-attachments/assets/3615186f-6b02-4df3-a012-afe77714044a)
+
+
 This package provides guidance for analysis of spatially resolved tissue (Visium ST), focusing on clonal dynamics derived from inferred copy number status.
 
 Our particular goal has been identification of the "lethal clone", defined as the clone which metasises from primary cancer tissue to lymph nodes. However, this package can be used for any analysis of clonal evolution and/or somatic mosaicism in heterogeneous tissue.  
