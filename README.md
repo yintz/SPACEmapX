@@ -1,5 +1,5 @@
 <img src="https://www.nds.ox.ac.uk/images/logos/secondary-logo" height="75" /> <img src="https://www.nds.ox.ac.uk/images/logos/primary-logo" height="75"/> 
-
+<img src="https://github.com/user-attachments/assets/3615186f-6b02-4df3-a012-afe77714044a" height="75" />
 
 
 <a href="https://twitter.com/intent/follow?screen_name=Wien_Yin">
@@ -14,8 +14,6 @@
 
 
 # SPACEMapX - Spatial Phylogenetic Analysis and Clonal Evolution: MAPping the lethal clone (X) 
-# ![image](https://github.com/user-attachments/assets/3615186f-6b02-4df3-a012-afe77714044a)
-
 
 This package provides guidance for analysis of spatially resolved tissue (Visium ST), focusing on clonal dynamics derived from inferred copy number status.
 
