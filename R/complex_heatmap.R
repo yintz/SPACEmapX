@@ -11,6 +11,13 @@
 
 
 
+library(Seurat)
+library(tidyverse)
+library(SpatialInferCNV)
+library(ComplexHeatmap)
+library(circlize)
+library(gridtext)
+library(ape)
 
 ####################################################################################################
 # Plot using ComplexHeatmap denoised
