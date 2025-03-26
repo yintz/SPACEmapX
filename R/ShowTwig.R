@@ -1,9 +1,9 @@
 # before you run, you must install the SptialinferCNV along with all the relavent package
 # and fully understand what you are doing in order to use this package.
-# this function is designed to select the FFPE samples based on the dendrogram tree's trig.
-# Once you select the the trig, type the trig ID in the function, it will generate the CSV
-# file with Trig ID for you to load back to the Loupe Brower to view and check.
-# the other function called ShowTrigSectionName stores the section name into CSV list.
+# this function is designed to select the FFPE samples based on the dendrogram tree's twig.
+# Once you select the the twig, type the twig ID in the function, it will generate the CSV
+# file with twig ID for you to load back to the Loupe Brower to view and check.
+# the other function called ShowtwigSectionName stores the section name into CSV list.
 # it is used to locate the section, which more used for further SptialInferCNV to refine.
 # this is the common function to use.
 
