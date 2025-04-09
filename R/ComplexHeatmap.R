@@ -18,7 +18,6 @@ plot_complex_heatmap <- function(infercnv_obj,
   
   library(ComplexHeatmap)
   library(tidyverse)
-  library(RColorBrewer)
   library(circlize)
   library(grid)
   library(gridExtra)
@@ -46,6 +45,9 @@ plot_complex_heatmap <- function(infercnv_obj,
   geneOrder <- geneOrder %>% filter(!str_detect(chr, "chrM"))
   sub_geneOrder <- geneOrder[intersect(gn, rownames(geneOrder)), ]
   expr <- expr[intersect(gn, rownames(geneOrder)), ]
+
+  # Chromosome colors
+  chr_colors <- colorRampPalette(RColorBrewer::brewer.pal(12, "Set3"))(length(unique(geneOrder$chr)))
   
   # CNV Color function
   cnv_colors <- c("#00008B","#24249B","#4848AB","#6D6DBC","#9191CC","#B6B6DD","#DADAEE","#FFFFFF",
@@ -58,9 +60,6 @@ plot_complex_heatmap <- function(infercnv_obj,
     cnv_colors[idx]
   }
   
-  # Chromosome colors
-  chr_colors <- colorRampPalette(RColorBrewer::brewer.pal(12, "Set3"))(length(unique(geneFile$V2)))
-  
   # Histology colors
   hist_colors_default <- c("#0077B6","#F4C0BA","#F7952B","#E54C2E","#DD0303","#7C2323","#FFEA00","#29BF12","#212529","#6C757D","#AFE8F4")
   
@@ -72,14 +71,21 @@ plot_complex_heatmap <- function(infercnv_obj,
   names(ref_loc) <- make.names(names(ref_loc))
   list2env(ref_loc, envir = environment())
   
-  ref_anno_list <- lapply(names(ref_loc), function(annotation) {
-    data.frame(CB = colnames(expr)[get(annotation)], class = annotation)
-  })
-  names(ref_anno_list) <- names(ref_loc)
+  ref_anno_list <- list()
+  for (annotation in names(ref_loc)) {
+  ref_anno_list[[annotation]] <- data.frame(
+    CB = colnames(expr)[get(annotation)],
+    class = annotation
+    )
+  }
   ref_anno_df <- do.call(rbind, ref_anno_list)
+
   ref_expr <- expr[, colnames(expr) %in% ref_anno_df$CB]
+  ref_anno_df <- ref_anno_df[match(colnames(ref_expr), ref_anno_df$CB), ]
+
   rownames(ref_anno_df) <- ref_anno_df$CB
   ref_anno_df$CB <- NULL
+
   ref_anno_df$sample <- sub("^(.*?)_.*", "\\1", rownames(ref_anno_df))
   
   ref_order <- infercnv_obj@tumor_subclusters$hc[[2]]$labels[infercnv_obj@tumor_subclusters$hc[[2]]$order]
@@ -90,14 +96,21 @@ plot_complex_heatmap <- function(infercnv_obj,
   names(obs_loc) <- make.names(names(obs_loc))
   list2env(obs_loc, envir = environment())
   
-  obs_anno_list <- lapply(names(obs_loc), function(annotation) {
-    data.frame(CB = colnames(expr)[get(annotation)], class = annotation)
-  })
-  names(obs_anno_list) <- names(obs_loc)
+  obs_anno_list <- list()
+  for (annotation in names(obs_loc)) {
+    obs_anno_list[[annotation]] <- data.frame(
+      CB = colnames(expr)[get(annotation)],
+      class = annotation
+    )
+  }
   obs_anno_df <- do.call(rbind, obs_anno_list)
+
   obs_expr <- expr[, colnames(expr) %in% obs_anno_df$CB]
+  obs_anno_df <- obs_anno_df[match(colnames(obs_expr), obs_anno_df$CB), ]
+
   rownames(obs_anno_df) <- obs_anno_df$CB
   obs_anno_df$CB <- NULL
+
   obs_anno_df$sample <- sub("^(.*?)_.*", "\\1", rownames(obs_anno_df))
   
   # Observation grouping
@@ -124,13 +137,16 @@ plot_complex_heatmap <- function(infercnv_obj,
   # Dendrogram
   tree_list <- read.tree(dendrogram_file)
   dend <- as.dendrogram(as.hclust(tree_list))
+
+  obs_expr <- obs_expr[, labels(dend)]
+  obs_anno_df <- obs_anno_df[labels(dend), ]
   
   # Set ht_options
-  ht_opt(ROW_ANNO_PADDING = unit(3, "mm"),
-         DENDROGRAM_PADDING = unit(3, "mm"),
-         HEATMAP_LEGEND_PADDING = unit(5, "mm"),
-         ANNOTATION_LEGEND_PADDING = unit(10, "mm"),
-         message = FALSE)
+  ht_opt$ROW_ANNO_PADDING = unit(3, "mm")
+  ht_opt$DENDROGRAM_PADDING = unit(3, "mm")
+  ht_opt$HEATMAP_LEGEND_PADDING = unit(5, "mm")
+  ht_opt$ANNOTATION_LEGEND_PADDING = unit(10, "mm")
+  ht_opt$message = FALSE
   
   # Heatmap objects
   ref_ht <- Heatmap(
@@ -143,31 +159,60 @@ plot_complex_heatmap <- function(infercnv_obj,
     show_row_names = FALSE,
     column_split = factor(sub_geneOrder$chr, levels = unique(sub_geneOrder$chr)),
     column_gap = unit(0, "mm"),
+    column_title = NULL,
     border = TRUE,
     row_title = "References (Spots)",
+    row_title_side = "right",
+    row_title_rot = 90,
+    row_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
     show_heatmap_legend = FALSE,
     height = unit(4, "inch")
   )
   
-  top_anno <- HeatmapAnnotation(foo = anno_block(gp = gpar(fill = chr_colors)))
+  top_anno <- HeatmapAnnotation(foo = anno_block(gp = gpar(fill = chr_colors, col = NA), labels = NULL))
+
   bottom_anno <- HeatmapAnnotation(
     foo = anno_block(gp = gpar(fill = "NA", col = "NA"),
-                     labels = unique(geneFile$V2),
+                     labels = unique(geneOrder$chr),
                      labels_rot = 90,
                      labels_gp = gpar(cex = 1))
   )
   
   obs_left_anno <- rowAnnotation(
     df = obs_anno_df[, c("sample", "histology", "class")],
-    col = list(class = class_colors, 
-               sample = sample_colors, 
-               histology = hist_colors),
+    col = list(sample = sample_colors,
+    histology = hist_colors,
+    class = class_colors),
     width = unit(19, "mm"),
-    simple_anno_size_adjust = TRUE
+    simple_anno_size_adjust = TRUE,
+    gap = unit(3, "mm"),
+    annotation_legend_param = list(
+      sample = list(
+        direction = "horizontal",
+        nrow = 1,
+        grid_height = unit(8, "mm"),
+        grid_width  = unit(8, "mm"),
+        labels_gp   = gpar(fontsize = 16),
+        title_gp    = gpar(fontsize = 16,
+        fontface = "bold")),
+      class = list(
+        direction = "horizontal",
+        nrow = 1,
+        grid_height = unit(8, "mm"),
+        grid_width  = unit(8, "mm"),
+        labels_gp   = gpar(fontsize = 16),
+        title_gp    = gpar(fontsize = 16,
+        fontface = "bold")),
+      histology = list(
+        direction = "horizontal",
+        nrow = 1,
+        grid_height = unit(8, "mm"),
+        grid_width  = unit(8, "mm"),
+        labels_gp   = gpar(fontsize = 16),
+        title_gp    = gpar(fontsize = 16,
+        fontface = "bold"))
+    )
   )
-  
-  obs_expr <- obs_expr[, labels(dend)]
-  obs_anno_df <- obs_anno_df[labels(dend), ]
   
   obs_ht <- Heatmap(
     t(obs_expr),
@@ -184,6 +229,9 @@ plot_complex_heatmap <- function(infercnv_obj,
     top_annotation = top_anno,
     left_annotation = obs_left_anno,
     row_title = "Observations (Spots)",
+    row_title_side = "right",
+    row_title_rot = 90,
+    row_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
     row_dend_width = unit(6, "cm"),
     height = unit(8, "inch")
   )
@@ -251,12 +299,12 @@ plot_complex_heatmap <- function(infercnv_obj,
   legend_plot_grob <- ggplotGrob(legend_plot)
   
   # Output
-  pdf(file.path(output_dir, output_pdf_name), width = 20, height = 18)
+  pdf(file.path(output_dir, output_pdf_name), width = 20, height = 16)
   draw(ht_list,
-       padding = unit(c(1, 1, 1, 1), "cm"),
+       padding = unit(c(1, 1, 2, 1), "cm"),
        column_title = "Genomic Region",
        column_title_side = "bottom",
-       column_title_gp = gpar(fontsize = 18, fontface = "bold"),
+       column_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
        ht_gap = unit(1, "cm"),
        annotation_legend_side = "bottom"
   )
