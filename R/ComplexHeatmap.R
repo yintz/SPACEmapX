@@ -18,6 +18,7 @@ plot_complex_heatmap <- function(infercnv_obj,
   
   library(ComplexHeatmap)
   library(tidyverse)
+  library(RColorBrewer)
   library(circlize)
   library(grid)
   library(gridExtra)
