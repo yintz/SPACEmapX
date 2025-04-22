@@ -4,17 +4,17 @@
 # These have not yet been extensively tested and are subject to change
 
 ## To be fixed
-# 1. Not plot ref plot when no ref
-# 2. Clone annotation ordered with individual dendrograms
-# 3. Add option for custom colors
-# 4. Histology option (where does Wencheng store it?)
+# (x) 1. Not plot ref plot when no ref
+# (x) 2. Clone annotation ordered with individual dendrograms
+# ( ) 3. Add option for custom colors
+# (x) 4. Histology option (where does Wencheng store it?)
 
 plot_complex_heatmap <- function(infercnv_obj,
                                  output_dir,
                                  heatmap_thresholds_file,
                                  dendrogram_file,
                                  obs_groups = "histology",
-                                 hist_anno_file,
+                                 hist_annotation,
                                  output_pdf_name = "complex_heatmap.pdf") {
   
   library(ComplexHeatmap)
@@ -25,6 +25,7 @@ plot_complex_heatmap <- function(infercnv_obj,
   library(gridExtra)
   library(ape)
   library(ggplot2)
+  library(dendextend)
   
   # Fetch expressions data
   expr <- infercnv_obj@expr.data
@@ -92,12 +93,82 @@ plot_complex_heatmap <- function(infercnv_obj,
   obs_anno_df$sample <- sub("^(.*?)_.*", "\\1", rownames(obs_anno_df))
   
   # Dendrogram
-  tree_list <- read.tree(dendrogram_file)
-  dend <- as.dendrogram(as.hclust(tree_list))
-  
-  # Re-order based on dendrogram
-  obs_expr <- obs_expr[, labels(dend)]
-  obs_anno_df <- obs_anno_df[labels(dend), ]
+  tree <- read.tree(dendrogram_file)
+  if (inherits(tree, "phylo")) {
+    dend <- as.dendrogram(as.hclust(tree))
+    dend <- rev(dend)
+    
+    # Re-order based on dendrogram
+    dend_labels <- labels(dend)
+    missing_labels <- setdiff(dend_labels, colnames(obs_expr))
+    if (length(missing_labels) > 0) {
+      stop("Some labels in the dendrogram are not found in obs_expr: ", paste(missing_labels, collapse = ", "))
+    }
+    obs_expr <- obs_expr[, labels(dend)]
+    obs_anno_df <- obs_anno_df[labels(dend), ]
+    
+    row_split <- NULL
+  }
+  else if (inherits(tree, "multiPhylo")) {
+
+    clone_tree_list <- read.tree(dendrogram_file)
+    
+    clone_dend_list <- lapply(clone_tree_list, function(tree) {
+      as.dendrogram(as.hclust(tree))
+    })
+    
+    # # 2‑way merge helper
+    # merge2 <- function(a, b, h) {
+    #   d <- structure(list(a,b), class="dendrogram")
+    #   attr(d, "members") <- attr(a,"members") + attr(b,"members")
+    #   attr(d, "height")  <- h
+    #   attr(d, "leaf")    <- FALSE
+    #   d
+    # }
+    # 
+    # # recursive star‑merge
+    # star_merge_rec <- function(dend_list, base_h = NULL, eps = NULL) {
+    #   # if this is the first call, compute base_h and eps
+    #   if (is.null(base_h)) {
+    #     heights <- sapply(dend_list, attr, "height")
+    #     base_h  <- max(heights)
+    #     span    <- diff(range(heights))
+    #     eps     <- if (span>0) span * 1e-6 else base_h*1e-6
+    #   }
+    #   # trivial cases
+    #   if (length(dend_list) == 1) return(dend_list[[1]])
+    #   if (length(dend_list) == 2) {
+    #     return( merge2(dend_list[[1]], dend_list[[2]], base_h) )
+    #   }
+    #   # otherwise: merge the first two at base_h, then recurse
+    #   first_pair <- merge2(dend_list[[1]], dend_list[[2]], base_h)
+    #   remaining  <- dend_list[-(1:2)]
+    #   # bump up the height for the *next* merge
+    #   star_merge_rec(c(list(first_pair), remaining),
+    #                  base_h + eps,
+    #                  eps)
+    # }
+    # 
+    # combined_binary_dend <- star_merge_rec(clone_dend_list)
+    
+    clone_order_list <- lapply(clone_dend_list, labels)
+    clone_spot_order <- unlist(clone_order_list)
+    names(clone_order_list) <- names(infercnv_obj@observation_grouped_cell_indices)
+    
+    clone_names <- names(clone_order_list)
+    clone_lengths <- sapply(clone_order_list, length)
+    row_split <- factor(rep(clone_names, times = clone_lengths), levels = clone_names) 
+    
+    # Re-order based on dendrogram
+    missing_labels <- setdiff(clone_spot_order, colnames(obs_expr))
+    if (length(missing_labels) > 0) {
+      stop("Some labels in the dendrogram are not found in obs_expr: ", paste(missing_labels, collapse = ", "))
+    }
+    obs_expr <- obs_expr[, clone_spot_order]
+    obs_anno_df <- obs_anno_df[clone_spot_order, ]
+    
+    dend <- function(mat) hclust(dist(mat), method = "ward.D2")
+  }
   
   # Set ht_options
   ht_opt$ROW_ANNO_PADDING = unit(3, "mm")
@@ -148,6 +219,15 @@ plot_complex_heatmap <- function(infercnv_obj,
                            fontface = "bold")
       )
     )
+    
+    obs_left_anno <- rowAnnotation(
+      df = obs_anno_df[, anno_type],
+      col = anno_col,
+      width = unit(19, "mm"),
+      simple_anno_size_adjust = TRUE,
+      gap = unit(3, "mm"),
+      annotation_legend_param = anno_leg
+    )
   }
   else if (obs_groups == "clone"){
     obs_anno_df <- obs_anno_df %>% rename(clone = class)
@@ -155,8 +235,28 @@ plot_complex_heatmap <- function(infercnv_obj,
     clone_color_indices <- round(seq(1, length(clone_colors_default), length.out = length(clone_levels)))
     clone_colors <- setNames(clone_colors_default[clone_color_indices], clone_levels)
     
-    hist_anno <- read.table(hist_anno_file, row.names = 1,sep = "\t", stringsAsFactors = FALSE)
-    obs_anno_df$histology <- hist_anno[rownames(obs_anno_df), "V2"]
+    if (is.character(hist_annotation) && file.exists(hist_annotation)) {
+      hist_anno <- read.table(hist_annotation, row.names = 1,sep = "\t", stringsAsFactors = FALSE)
+      
+      if (!"Histology" %in% colnames(hist_anno)) {
+        stop("hist_annotation file must contain a column named 'Histology'")
+      }
+      
+      obs_anno_df$histology <- hist_anno[rownames(obs_anno_df), "Histology"]
+      
+    } else if (is.data.frame(hist_annotation)) {
+      
+      if (!all(rownames(obs_anno_df) %in% rownames(hist_annotation))) {
+        stop("hist_annotation data frame rownames must match obs_anno_df rownames")
+      }
+      
+      obs_anno_df$histology <- hist_annotation[rownames(obs_anno_df), 1]
+      
+    } else {
+      
+      stop("`hist_annotation` must be either a file path to a .tsv or a data frame.")
+      
+    }
     
     hist_colors <- setNames(hist_colors_default, sort(unique(obs_anno_df$histology)))
     hist_colors <- hist_colors[!is.na((names(hist_colors)))]
@@ -192,26 +292,31 @@ plot_complex_heatmap <- function(infercnv_obj,
                            fontface = "bold")
       )
     )
+    
+    obs_left_anno <- rowAnnotation(
+      df = obs_anno_df[, anno_type],
+      col = anno_col,
+      width = unit(30, "mm"),
+      simple_anno_size_adjust = TRUE,
+      gap = unit(3, "mm"),
+      annotation_legend_param = anno_leg
+    )
   }
-  
-  obs_left_anno <- rowAnnotation(
-    df = obs_anno_df[, anno_type],
-    col = anno_col,
-    width = unit(19, "mm"),
-    simple_anno_size_adjust = TRUE,
-    gap = unit(3, "mm"),
-    annotation_legend_param = anno_leg
-  )
   
   obs_ht <- Heatmap(
     t(obs_expr),
     col = cnv_col_fun,
-    cluster_rows = rev(dend),
+    cluster_rows = dend,
     cluster_columns = FALSE,
     show_column_names = FALSE,
-    show_row_names = FALSE,
+    show_row_names = FALSE, 
+    show_row_dend = TRUE,
+    row_dend_side = "left",
     column_split = factor(sub_geneOrder$chr, levels = unique(sub_geneOrder$chr)),
-    column_gap = unit(0, "mm"),
+    column_gap = unit(0, "mm"), 
+    row_split = row_split, 
+    cluster_row_slices = FALSE, 
+    row_gap = unit(0, "mm"),
     border = TRUE,
     show_heatmap_legend = FALSE,
     bottom_annotation = bottom_anno,
@@ -311,7 +416,7 @@ plot_complex_heatmap <- function(infercnv_obj,
     
     ref_anno_df$sample <- sub("^(.*?)_.*", "\\1", rownames(ref_anno_df))
     
-    ref_order <- infercnv_obj@tumor_subclusters$hc[[2]]$labels[infercnv_obj@tumor_subclusters$hc[[2]]$order]
+    ref_order <- infercnv_obj@tumor_subclusters$hc[[length(infercnv_obj@tumor_subclusters$hc)]]$labels[infercnv_obj@tumor_subclusters$hc[[length(infercnv_obj@tumor_subclusters$hc)]]$order]
     ref_expr <- ref_expr[, ref_order]
     ref_anno_df <- ref_anno_df[ref_order, ]
     
