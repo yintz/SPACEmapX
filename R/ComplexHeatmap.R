@@ -110,46 +110,12 @@ plot_complex_heatmap <- function(infercnv_obj,
     row_split <- NULL
   }
   else if (inherits(tree, "multiPhylo")) {
-
+    
     clone_tree_list <- read.tree(dendrogram_file)
     
     clone_dend_list <- lapply(clone_tree_list, function(tree) {
       as.dendrogram(as.hclust(tree))
     })
-    
-    # # 2‑way merge helper
-    # merge2 <- function(a, b, h) {
-    #   d <- structure(list(a,b), class="dendrogram")
-    #   attr(d, "members") <- attr(a,"members") + attr(b,"members")
-    #   attr(d, "height")  <- h
-    #   attr(d, "leaf")    <- FALSE
-    #   d
-    # }
-    # 
-    # # recursive star‑merge
-    # star_merge_rec <- function(dend_list, base_h = NULL, eps = NULL) {
-    #   # if this is the first call, compute base_h and eps
-    #   if (is.null(base_h)) {
-    #     heights <- sapply(dend_list, attr, "height")
-    #     base_h  <- max(heights)
-    #     span    <- diff(range(heights))
-    #     eps     <- if (span>0) span * 1e-6 else base_h*1e-6
-    #   }
-    #   # trivial cases
-    #   if (length(dend_list) == 1) return(dend_list[[1]])
-    #   if (length(dend_list) == 2) {
-    #     return( merge2(dend_list[[1]], dend_list[[2]], base_h) )
-    #   }
-    #   # otherwise: merge the first two at base_h, then recurse
-    #   first_pair <- merge2(dend_list[[1]], dend_list[[2]], base_h)
-    #   remaining  <- dend_list[-(1:2)]
-    #   # bump up the height for the *next* merge
-    #   star_merge_rec(c(list(first_pair), remaining),
-    #                  base_h + eps,
-    #                  eps)
-    # }
-    # 
-    # combined_binary_dend <- star_merge_rec(clone_dend_list)
     
     clone_order_list <- lapply(clone_dend_list, labels)
     clone_spot_order <- unlist(clone_order_list)
@@ -424,7 +390,7 @@ plot_complex_heatmap <- function(infercnv_obj,
     ref_ht <- Heatmap(
       t(ref_expr),
       col = cnv_col_fun,
-      cluster_rows = TRUE,
+      cluster_rows = function(mat) hclust(dist(mat), method = "ward.D2"),
       show_row_dend = FALSE,
       cluster_columns = FALSE,
       show_column_names = FALSE,
