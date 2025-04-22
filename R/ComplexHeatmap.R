@@ -1,13 +1,40 @@
 # Work in progress
-# Function is intended to create a heatmap of the inferCNV output using the ComplexHeatmap package
-
 # These have not yet been extensively tested and are subject to change
 
-## To be fixed
-# (x) 1. Not plot ref plot when no ref
-# (x) 2. Clone annotation ordered with individual dendrograms
-# ( ) 3. Add option for custom colors
-# (x) 4. Histology option (where does Wencheng store it?)
+#' Plot Complex Heatmap for inferCNV Output
+#'
+#' This function generates a heatmap using the ComplexHeatmap package to visualize inferCNV results,
+#' supporting reference and observation groups, histology and clone annotations, and user-defined color schemes.
+#' 
+#' @param infercnv_obj An inferCNV object created by the `infercnv::create_infercnv_object` and processed by `run()` or `run_infercnv()`.
+#' @param output_dir Directory where the output heatmap PDF will be saved.
+#' @param heatmap_thresholds_file Path to the inferCNV-generated `heatmap_thresholds.txt` file.
+#' @param dendrogram_file A Newick file for dendrogram, can be either a single tree (`phylo`) or multiple trees (`multiPhylo`).
+#' @param obs_groups Character string indicating how observations are grouped: `"histology"` (default) or `"clone"`.
+#' @param hist_annotation A data frame or path to a TSV file with histology information (must include a `"Histology"` column).
+#' @param output_pdf_name Filename for the saved heatmap PDF. Default is `"complex_heatmap.pdf"`.
+#' @param hist_cols Optional. Named list or vector of colors for histology groups. Format: `c("group1" = "#hex", ...)`.
+#' @param clone_cols Optional. Named list or vector of colors for clone groups. Format: `c("clone1" = "#hex", ...)`.
+#'
+#' @return A PDF file is saved to `output_dir`, visualizing CNV patterns across references and observations with dendrograms and annotations.
+#'
+#' @details
+#' - For `dendrogram_file`, a single tree (`phylo`) will apply a global dendrogram, while a multiple tree (`multiPhylo`) input will order spots per clone.
+#' - The function will auto-detect and adjust for reference presence.
+#' - Colors for sample, histology, and clone groups are automatically generated but can be overridden.
+#' - Chromosome and CNV coloring is derived from inferCNV settings and thresholds.
+#'
+#' @examples
+#' plot_complex_heatmap(
+#'   infercnv_obj = my_infercnv,
+#'   output_dir = "results/",
+#'   heatmap_thresholds_file = "results/infercnv.heatmap_thresholds.txt",
+#'   dendrogram_file = "results/infercnv.observations_dendrogram.txt",
+#'   obs_groups = "clone",
+#'   hist_annotation = "metadata/histologies.tsv",
+#'   hist_cols = c("Tumor" = "#FF0000", "Normal" = "#0000FF"),
+#'   clone_cols = c("Clone1" = "#E41A1C", "Clone2" = "#377EB8")
+#' )
 
 plot_complex_heatmap <- function(infercnv_obj,
                                  output_dir,
@@ -15,7 +42,9 @@ plot_complex_heatmap <- function(infercnv_obj,
                                  dendrogram_file,
                                  obs_groups = "histology",
                                  hist_annotation,
-                                 output_pdf_name = "complex_heatmap.pdf") {
+                                 output_pdf_name = "complex_heatmap.pdf",
+                                 hist_cols = NULL,
+                                 clone_cols = NULL) {
   
   library(ComplexHeatmap)
   library(tidyverse)
@@ -26,6 +55,10 @@ plot_complex_heatmap <- function(infercnv_obj,
   library(ape)
   library(ggplot2)
   library(dendextend)
+  
+  if (!obs_groups %in% c("histology", "clone")) {
+    stop("`obs_groups` must be either 'histology' or 'clone'.")
+  }
   
   # Fetch expressions data
   expr <- infercnv_obj@expr.data
@@ -62,7 +95,7 @@ plot_complex_heatmap <- function(infercnv_obj,
   clone_colors_default <- c("#CCCCCC","#736F72","#CAF0F8","#80FFDB","#00B4D8","#01497C","#155D27","#29BF12","#ABFF4F",
                             "#FCF300","#FF8000","#E54C2E","#D40000","#780000","#9B3F11","#A24CCD","#5A189A","#000000")
   
-  cnv_breakpoints <- read_csv(heatmap_thresholds_file, col_names = FALSE)[[1]]
+  cnv_breakpoints <- read_csv(heatmap_thresholds_file, col_names = FALSE, show_col_types = FALSE)[[1]]
   cnv_col_fun <- function(x) {
     idx <- findInterval(x, cnv_breakpoints)
     idx[idx < 1] <- 1
@@ -158,8 +191,14 @@ plot_complex_heatmap <- function(infercnv_obj,
   
   if (obs_groups == "histology"){
     obs_anno_df <- obs_anno_df %>% rename(histology = class)
-    hist_colors <- setNames(hist_colors_default, 
-                            sort(unique(obs_anno_df$histology)))
+    
+    if (!is.null(hist_cols)) {
+      hist_colors <- hist_cols
+    } else {
+      hist_colors <- setNames(hist_colors_default, 
+                              sort(unique(obs_anno_df$histology)))
+    }
+    
     hist_colors <- hist_colors[!is.na((names(hist_colors)))]
     
     anno_type <- c("sample", "histology")
@@ -197,9 +236,14 @@ plot_complex_heatmap <- function(infercnv_obj,
   }
   else if (obs_groups == "clone"){
     obs_anno_df <- obs_anno_df %>% rename(clone = class)
-    clone_levels <- sort(unique(obs_anno_df$clone))
-    clone_color_indices <- round(seq(1, length(clone_colors_default), length.out = length(clone_levels)))
-    clone_colors <- setNames(clone_colors_default[clone_color_indices], clone_levels)
+    
+    if (!is.null(clone_cols)) {
+      clone_colors <- clone_cols
+    } else {
+      clone_levels <- sort(unique(obs_anno_df$clone))
+      clone_color_indices <- round(seq(1, length(clone_colors_default), length.out = length(clone_levels)))
+      clone_colors <- setNames(clone_colors_default[clone_color_indices], clone_levels)
+    }
     
     if (is.character(hist_annotation) && file.exists(hist_annotation)) {
       hist_anno <- read.table(hist_annotation, row.names = 1,sep = "\t", stringsAsFactors = FALSE)
@@ -224,7 +268,13 @@ plot_complex_heatmap <- function(infercnv_obj,
       
     }
     
-    hist_colors <- setNames(hist_colors_default, sort(unique(obs_anno_df$histology)))
+    if (!is.null(hist_cols)) {
+      hist_colors <- hist_cols
+    } else {
+      hist_colors <- setNames(hist_colors_default, 
+                              sort(unique(obs_anno_df$histology)))
+    }
+    
     hist_colors <- hist_colors[!is.na((names(hist_colors)))]
     
     anno_type <- c("sample", "histology", "clone")
