@@ -12,7 +12,8 @@
 #' @param dendrogram_file A Newick file for dendrogram, can be either a single tree (`phylo`) or multiple trees (`multiPhylo`).
 #' @param obs_groups Character string indicating how observations are grouped: `"histology"` (default) or `"clone"`.
 #' @param hist_annotation A data frame or path to a TSV file with histology information (must include a `"Histology"` column). Required if obs_groups = “clone”.
-#' @param output_pdf_name Filename for the saved heatmap PDF. Default is `"complex_heatmap.pdf"`.
+#' @param output_format File format for the saved heatmap: `"png"` (default) or `"pdf"`.
+#' @param output_name File name for the saved heatmap. Default is `"complex_heatmap.png"`.
 #' @param hist_cols Optional. Named list or vector of colors for histology groups. Format: `c("group1" = "#hex", ...)`.
 #' @param clone_cols Optional. Named list or vector of colors for clone groups. Format: `c("clone1" = "#hex", ...)`.
 #'
@@ -42,7 +43,8 @@ plot_complex_heatmap <- function(infercnv_obj,
                                  dendrogram_file,
                                  obs_groups = "histology",
                                  hist_annotation,
-                                 output_pdf_name = "complex_heatmap.pdf",
+                                 output_format = "png",
+                                 output_name = "complex_heatmap.png",
                                  hist_cols = NULL,
                                  clone_cols = NULL) {
 
@@ -60,6 +62,10 @@ plot_complex_heatmap <- function(infercnv_obj,
     stop("`obs_groups` must be either 'histology' or 'clone'.")
   }
 
+  if (!output_format %in% c("png", "pdf")) {
+    stop("`output_format` must be either 'png' or 'pdf'.")
+  }
+
   # Fetch expressions data
   expr <- infercnv_obj@expr.data
 
@@ -72,7 +78,7 @@ plot_complex_heatmap <- function(infercnv_obj,
 
   # Colors
   ## Sample
-  unique_samples <- unique(sub("^(.*?)_.*", "\\1", colnames(expr)))
+  unique_samples <- unique(str_remove(str_remove(colnames(expr), "_[^_]*$"), "^[^_]*_"))
   if (length(unique_samples) <= 9) {
     sample_colors <- setNames(RColorBrewer::brewer.pal(length(unique_samples), "Set1"), unique_samples)
   } else {
@@ -123,11 +129,12 @@ plot_complex_heatmap <- function(infercnv_obj,
   rownames(obs_anno_df) <- obs_anno_df$CB
   obs_anno_df$CB <- NULL
 
-  obs_anno_df$sample <- sub("^(.*?)_.*", "\\1", rownames(obs_anno_df))
+  obs_anno_df$sample <- str_remove(str_remove(rownames(obs_anno_df), "_[^_]*$"), "^[^_]*_")
 
   # Dendrogram
   tree <- read.tree(dendrogram_file)
   if (inherits(tree, "phylo")) {
+
     dend <- as.dendrogram(as.hclust(tree))
     dend <- rev(dend)
 
@@ -144,10 +151,8 @@ plot_complex_heatmap <- function(infercnv_obj,
   }
   else if (inherits(tree, "multiPhylo")) {
 
-    clone_tree_list <- read.tree(dendrogram_file)
-
-    clone_dend_list <- lapply(clone_tree_list, function(tree) {
-      as.dendrogram(as.hclust(tree))
+    clone_dend_list <- lapply(tree, function(single_tree) {
+      as.dendrogram(as.hclust(single_tree))
     })
 
     clone_order_list <- lapply(clone_dend_list, labels)
@@ -246,27 +251,22 @@ plot_complex_heatmap <- function(infercnv_obj,
     }
 
     if (is.character(hist_annotation) && file.exists(hist_annotation)) {
-      hist_anno <- read.table(hist_annotation, row.names = 1,sep = "\t", stringsAsFactors = FALSE)
-
-      if (!"Histology" %in% colnames(hist_anno)) {
-        stop("hist_annotation file must contain a column named 'Histology'")
-      }
-
-      obs_anno_df$histology <- hist_anno[rownames(obs_anno_df), "Histology"]
-
+      hist_anno <- read.table(hist_annotation, row.names = 1, sep = "\t", stringsAsFactors = FALSE, col.names = "Histology")
     } else if (is.data.frame(hist_annotation)) {
-
-      if (!all(rownames(obs_anno_df) %in% rownames(hist_annotation))) {
-        stop("hist_annotation data frame rownames must match obs_anno_df rownames")
+      hist_anno <- hist_annotation
+      if (!"Histology" %in% colnames(hist_anno)) {
+        stop("hist_annotation data frame must contain a column named 'Histology'")
       }
-
-      obs_anno_df$histology <- hist_annotation[rownames(obs_anno_df), 1]
-
     } else {
-
       stop("`hist_annotation` must be either a file path to a .tsv or a data frame.")
-
     }
+    if (!all(rownames(obs_anno_df) %in% rownames(hist_anno))) {
+      stop("hist_annotation data frame rownames must contain all obs_anno_df rownames")
+    }
+
+    hist_anno <- hist_anno[rownames(obs_anno_df), , drop = FALSE]
+
+    obs_anno_df$histology <- hist_anno[rownames(obs_anno_df), "Histology"]
 
     if (!is.null(hist_cols)) {
       hist_colors <- hist_cols
@@ -275,7 +275,7 @@ plot_complex_heatmap <- function(infercnv_obj,
                               sort(unique(obs_anno_df$histology)))
     }
 
-    hist_colors <- hist_colors[!is.na((names(hist_colors)))]
+    hist_colors <- hist_colors[!is.na(names(hist_colors))]
 
     anno_type <- c("sample", "histology", "clone")
     anno_col <- list(sample = sample_colors,
@@ -305,8 +305,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         grid_width  = unit(8, "mm"),
         labels_gp   = gpar(fontsize = 16),
         title_gp    = gpar(fontsize = 16,
-                           fontface = "bold")
-      )
+                           fontface = "bold"))
     )
 
     obs_left_anno <- rowAnnotation(
@@ -343,7 +342,12 @@ plot_complex_heatmap <- function(infercnv_obj,
     row_title_rot = 90,
     row_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
     row_dend_width = unit(6, "cm"),
-    height = unit(8, "inch")
+    height = unit(8, "inch"),
+    use_raster = TRUE,
+    raster_device = "agg_png",
+    raster_quality = 6,
+    raster_resize_mat = FALSE,
+    raster_by_magick = FALSE
   )
 
   # Function for heatmap legend
@@ -430,11 +434,52 @@ plot_complex_heatmap <- function(infercnv_obj,
     rownames(ref_anno_df) <- ref_anno_df$CB
     ref_anno_df$CB <- NULL
 
-    ref_anno_df$sample <- sub("^(.*?)_.*", "\\1", rownames(ref_anno_df))
+    ref_anno_df$sample <- str_remove(str_remove(rownames(ref_anno_df), "_[^_]*$"), "^[^_]*_")
 
-    ref_order <- infercnv_obj@tumor_subclusters$hc[[length(infercnv_obj@tumor_subclusters$hc)]]$labels[infercnv_obj@tumor_subclusters$hc[[length(infercnv_obj@tumor_subclusters$hc)]]$order]
-    ref_expr <- ref_expr[, ref_order]
-    ref_anno_df <- ref_anno_df[ref_order, ]
+    ref_anno_df$histology <- "Benign"
+    ref_anno_df$clone <- "Clone 0"
+
+    ref_anno_type <- c("sample", "histology", "clone")
+    ref_anno_col <- list(sample = sample_colors,
+                         histology = c("Benign" = "#0077B6"),
+                         clone = c("Clone 0" = "#CCCCCC")
+    )
+
+    ref_anno_leg <- list(
+      sample = list(
+        direction = "horizontal",
+        nrow = 1,
+        grid_height = unit(8, "mm"),
+        grid_width  = unit(8, "mm"),
+        labels_gp   = gpar(fontsize = 16),
+        title_gp    = gpar(fontsize = 16,
+                           fontface = "bold")),
+      histology = list(
+        direction = "horizontal",
+        nrow = 1,
+        grid_height = unit(8, "mm"),
+        grid_width  = unit(8, "mm"),
+        labels_gp   = gpar(fontsize = 16),
+        title_gp    = gpar(fontsize = 16,
+                           fontface = "bold")),
+      clone = list(
+        direction = "horizontal",
+        nrow = 1,
+        grid_height = unit(8, "mm"),
+        grid_width  = unit(8, "mm"),
+        labels_gp   = gpar(fontsize = 16),
+        title_gp    = gpar(fontsize = 16,
+                           fontface = "bold")
+      )
+    )
+    ref_left_anno <- rowAnnotation(
+      df = ref_anno_df[, ref_anno_type],
+      col = ref_anno_col,
+      width = unit(30, "mm"),
+      simple_anno_size_adjust = TRUE,
+      gap = unit(3, "mm"),
+      annotation_legend_param = ref_anno_leg
+    )
 
     # Ref heatmap object
     ref_ht <- Heatmap(
@@ -445,6 +490,7 @@ plot_complex_heatmap <- function(infercnv_obj,
       cluster_columns = FALSE,
       show_column_names = FALSE,
       show_row_names = FALSE,
+      left_annotation = ref_left_anno,
       column_split = factor(sub_geneOrder$chr, levels = unique(sub_geneOrder$chr)),
       column_gap = unit(0, "mm"),
       column_title = NULL,
@@ -454,7 +500,12 @@ plot_complex_heatmap <- function(infercnv_obj,
       row_title_rot = 90,
       row_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
       show_heatmap_legend = FALSE,
-      height = unit(4, "inch")
+      height = unit(3, "inch"),
+      use_raster = TRUE,
+      raster_device = "agg_png",
+      raster_quality = 6,
+      raster_resize_mat = FALSE,
+      raster_by_magick = FALSE
     )
   }
   else {
@@ -470,25 +521,41 @@ plot_complex_heatmap <- function(infercnv_obj,
       column_title = NULL,
       border = FALSE,
       rect_gp = gpar(fill = NA, col = NA),
-      height = unit(4, "inch")
+      height = unit(3, "inch")
     )
   }
 
   ht_list <- ref_ht %v% obs_ht
 
-  # Plot
-  pdf(file.path(output_dir, output_pdf_name), width = 20, height = 16)
-  draw(ht_list,
-       padding = unit(c(1, 1, 2, 1), "cm"),
-       column_title = "Genomic Region",
-       column_title_side = "bottom",
-       column_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
-       ht_gap = unit(1, "cm"),
-       annotation_legend_side = "bottom"
-  )
-  vp <- viewport(x = 0.01, y = 0.94, width = 0.15, height = 0.25, just = c("left", "top"))
-  pushViewport(vp)
-  grid.draw(legend_plot_grob)
-  popViewport()
-  dev.off()
+  if (output_format == "png") {
+    png(file.path(output_dir, output_name), width = 20, height = 16, units = "in", res = 300)
+    draw(ht_list,
+         padding = unit(c(1, 1, 2, 1), "cm"),
+         column_title = "Genomic Region",
+         column_title_side = "bottom",
+         column_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
+         ht_gap = unit(2, "cm"),
+         annotation_legend_side = "bottom"
+    )
+    vp <- viewport(x = 0.01, y = 0.94, width = 0.10, height = 0.20, just = c("left", "top"))
+    pushViewport(vp)
+    grid.draw(legend_plot_grob)
+    popViewport()
+    dev.off()
+  } else if (output_format == "pdf") {
+    pdf(file.path(output_dir, output_name), width = 20, height = 16)
+    draw(ht_list,
+         padding = unit(c(1, 1, 2, 1), "cm"),
+         column_title = "Genomic Region",
+         column_title_side = "bottom",
+         column_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
+         ht_gap = unit(2, "cm"),
+         annotation_legend_side = "bottom"
+    )
+    vp <- viewport(x = 0.01, y = 0.94, width = 0.10, height = 0.20, just = c("left", "top"))
+    pushViewport(vp)
+    grid.draw(legend_plot_grob)
+    popViewport()
+    dev.off()
+  }
 }
