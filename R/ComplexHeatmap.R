@@ -194,17 +194,16 @@ plot_complex_heatmap <- function(infercnv_obj,
                      labels_gp = gpar(cex = 1))
   )
 
+  if (!is.null(hist_cols)) {
+    hist_colors <- hist_cols
+  } else {
+    hist_colors <- setNames(hist_colors_default,
+                            sort(unique(obs_anno_df$histology)))
+    hist_colors <- hist_colors[!is.na((names(hist_colors)))]
+  }
+
   if (obs_groups == "histology"){
     obs_anno_df <- obs_anno_df %>% rename(histology = class)
-
-    if (!is.null(hist_cols)) {
-      hist_colors <- hist_cols
-    } else {
-      hist_colors <- setNames(hist_colors_default,
-                              sort(unique(obs_anno_df$histology)))
-    }
-
-    hist_colors <- hist_colors[!is.na((names(hist_colors)))]
 
     anno_type <- c("sample", "histology")
     anno_col <- list(sample = sample_colors,
@@ -267,15 +266,6 @@ plot_complex_heatmap <- function(infercnv_obj,
     hist_anno <- hist_anno[rownames(obs_anno_df), , drop = FALSE]
 
     obs_anno_df$histology <- hist_anno[rownames(obs_anno_df), "Histology"]
-
-    if (!is.null(hist_cols)) {
-      hist_colors <- hist_cols
-    } else {
-      hist_colors <- setNames(hist_colors_default,
-                              sort(unique(obs_anno_df$histology)))
-    }
-
-    hist_colors <- hist_colors[!is.na(names(hist_colors))]
 
     anno_type <- c("sample", "histology", "clone")
     anno_col <- list(sample = sample_colors,
@@ -437,12 +427,12 @@ plot_complex_heatmap <- function(infercnv_obj,
     ref_anno_df$sample <- str_remove(str_remove(rownames(ref_anno_df), "_[^_]*$"), "^[^_]*_")
 
     ref_anno_df$histology <- "Benign"
-    ref_anno_df$clone <- "Clone 0"
+    ref_anno_df$clone <- "Clone0"
 
     ref_anno_type <- c("sample", "histology", "clone")
     ref_anno_col <- list(sample = sample_colors,
-                         histology = c("Benign" = "#0077B6"),
-                         clone = c("Clone 0" = "#CCCCCC")
+                         histology = hist_colors,
+                         clone = clone_colors
     )
 
     ref_anno_leg <- list(
