@@ -91,15 +91,15 @@ plot_complex_heatmap <- function(infercnv_obj,
   chr_colors <- colorRampPalette(RColorBrewer::brewer.pal(12, "Set3"))(length(unique(geneOrder$chr)))
 
   ## CNV
-  cnv_colors <- c("#00008B","#24249B","#4848AB","#6D6DBC","#9191CC","#B6B6DD","#DADAEE","#FFFFFF",
-                  "#EEDADA","#DDB6B6","#CC9191","#BC6D6D","#AB4848","#9B2424","#8B0000")
+  cnv_colors <- c("#00008B", "#24249B", "#4848AB", "#6D6DBC", "#9191CC", "#B6B6DD", "#DADAEE", "#FFFFFF",
+                  "#EEDADA", "#DDB6B6", "#CC9191", "#BC6D6D", "#AB4848", "#9B2424", "#8B0000")
 
   ## Histology
-  hist_colors_default <- c("#0077B6","#F4C0BA","#F7952B","#E54C2E","#DD0303","#7C2323","#FFEA00","#29BF12","#212529","#6C757D","#AFE8F4")
+  hist_colors_default <- c("#0077B6", "#F4C0BA", "#F7952B", "#E54C2E", "#DD0303", "#7C2323", "#FFEA00", "#29BF12", "#212529", "#6C757D", "#AFE8F4")
 
   ## Clone
-  clone_colors_default <- c("#CCCCCC","#736F72","#CAF0F8","#80FFDB","#00B4D8","#01497C","#155D27","#29BF12","#ABFF4F",
-                            "#FCF300","#FF8000","#E54C2E","#D40000","#780000","#9B3F11","#A24CCD","#5A189A","#000000")
+  clone_colors_default <- c("#CCCCCC", "#736F72", "#CAF0F8", "#80FFDB", "#00B4D8", "#01497C", "#155D27", "#29BF12", "#ABFF4F",
+                            "#FCF300", "#FF8000", "#E54C2E", "#D40000", "#780000", "#9B3F11", "#A24CCD", "#5A189A", "#000000")
 
   cnv_breakpoints <- read_csv(heatmap_thresholds_file, col_names = FALSE, show_col_types = FALSE)[[1]]
   cnv_col_fun <- function(x) {
@@ -148,8 +148,7 @@ plot_complex_heatmap <- function(infercnv_obj,
     obs_anno_df <- obs_anno_df[labels(dend), ]
 
     row_split <- NULL
-  }
-  else if (inherits(tree, "multiPhylo")) {
+  } else if (inherits(tree, "multiPhylo")) {
 
     clone_dend_list <- lapply(tree, function(single_tree) {
       as.dendrogram(as.hclust(single_tree))
@@ -175,11 +174,11 @@ plot_complex_heatmap <- function(infercnv_obj,
   }
 
   # Set ht_options
-  ht_opt$ROW_ANNO_PADDING = unit(3, "mm")
-  ht_opt$DENDROGRAM_PADDING = unit(3, "mm")
-  ht_opt$HEATMAP_LEGEND_PADDING = unit(5, "mm")
-  ht_opt$ANNOTATION_LEGEND_PADDING = unit(10, "mm")
-  ht_opt$message = FALSE
+  ht_opt$ROW_ANNO_PADDING <- unit(3, "mm")
+  ht_opt$DENDROGRAM_PADDING <- unit(3, "mm")
+  ht_opt$HEATMAP_LEGEND_PADDING <- unit(5, "mm")
+  ht_opt$ANNOTATION_LEGEND_PADDING <- unit(10, "mm")
+  ht_opt$message <- FALSE
 
   # Obs Heatmap object
   top_anno <- HeatmapAnnotation(foo = anno_block(gp = gpar(fill = chr_colors, col = NA),
@@ -202,7 +201,7 @@ plot_complex_heatmap <- function(infercnv_obj,
     hist_colors <- hist_colors[!is.na((names(hist_colors)))]
   }
 
-  if (obs_groups == "histology"){
+  if (obs_groups == "histology") {
     obs_anno_df <- obs_anno_df %>% rename(histology = class)
 
     anno_type <- c("sample", "histology")
@@ -237,8 +236,7 @@ plot_complex_heatmap <- function(infercnv_obj,
       gap = unit(3, "mm"),
       annotation_legend_param = anno_leg
     )
-  }
-  else if (obs_groups == "clone"){
+  } else if (obs_groups == "clone") {
     obs_anno_df <- obs_anno_df %>% rename(clone = class)
 
     if (!is.null(clone_cols)) {
@@ -403,7 +401,7 @@ plot_complex_heatmap <- function(infercnv_obj,
 
   # Annotations - Reference
   ## if there is reference
-  if (is_empty(infercnv_obj@reference_grouped_cell_indices) == FALSE){
+  if (is_empty(infercnv_obj@reference_grouped_cell_indices) == FALSE) {
     ref_loc <- infercnv_obj@reference_grouped_cell_indices
 
     names(ref_loc) <- make.names(names(ref_loc))
@@ -497,8 +495,7 @@ plot_complex_heatmap <- function(infercnv_obj,
       raster_resize_mat = FALSE,
       raster_by_magick = FALSE
     )
-  }
-  else {
+  } else {
     ref_ht <- Heatmap(
       matrix(NA, nrow = 1, ncol = nrow(obs_expr)),
       cluster_rows = FALSE,
