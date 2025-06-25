@@ -80,10 +80,10 @@ plot_complex_heatmap <- function(infercnv_obj,
   ## Sample
   unique_samples <- unique(str_remove(str_remove(colnames(expr), "_[^_]*$"), "^[^_]*_"))
   if (length(unique_samples) <= 9) {
-    sample_colors <- setNames(RColorBrewer::brewer.pal(length(unique_samples), "Set1"), unique_samples)
+    sample_colors <- setNames(RColorBrewer::brewer.pal(length(unique_samples), "Set3"), unique_samples)
   } else {
     sample_colors <- setNames(
-      colorRampPalette(RColorBrewer::brewer.pal(9, "Set1"))(length(unique_samples)), unique_samples)
+      colorRampPalette(RColorBrewer::brewer.pal(9, "Set3"))(length(unique_samples)), unique_samples)
   }
   sample_colors <- sample_colors[!is.na(names(sample_colors))]
 
@@ -98,8 +98,10 @@ plot_complex_heatmap <- function(infercnv_obj,
   hist_colors_default <- c("#0077B6", "#F4C0BA", "#F7952B", "#E54C2E", "#DD0303", "#7C2323", "#FFEA00", "#29BF12", "#212529", "#6C757D", "#AFE8F4")
 
   ## Clone
-  clone_colors_default <- c("#CCCCCC", "#736F72", "#CAF0F8", "#80FFDB", "#00B4D8", "#01497C", "#155D27", "#29BF12", "#ABFF4F",
-                            "#FCF300", "#FF8000", "#E54C2E", "#D40000", "#780000", "#9B3F11", "#A24CCD", "#5A189A", "#000000")
+  # Extra colors "#CCCCCC", "#736F72", "#000000"
+  #clone_colors_full <- c("#CAF0F8", "#80FFDB", "#00B4D8", "#01497C", "#155D27", "#29BF12", "#ABFF4F", "#FCF300", "#FF8000", "#E54C2E", "#D40000", "#780000", "#9B3F11", "#A24CCD", "#5A189A")
+  clone_colors_default <- c("#CAF0F8", "#80FFDB", "#00B4D8", "#01497C", "#155D27", "#29BF12", "#ABFF4F", "#FCF300", "#FF8000", "#E54C2E")
+  clone_x_colors_default <- c("#D40000", "#780000", "#9B3F11", "#A24CCD", "#5A189A")
 
   cnv_breakpoints <- read_csv(heatmap_thresholds_file, col_names = FALSE, show_col_types = FALSE)[[1]]
   cnv_col_fun <- function(x) {
@@ -114,12 +116,14 @@ plot_complex_heatmap <- function(infercnv_obj,
   names(obs_loc) <- make.names(names(obs_loc))
   list2env(obs_loc, envir = environment())
 
+  display_name_map_obs <- names(pt03_infCNV_out@observation_grouped_cell_indices)
+  names(display_name_map_obs) <- names(obs_loc)
+
   obs_anno_list <- list()
   for (annotation in names(obs_loc)) {
     obs_anno_list[[annotation]] <- data.frame(
       CB = colnames(expr)[get(annotation)],
-      class = annotation
-    )
+      class = display_name_map_obs[annotation])
   }
   obs_anno_df <- do.call(rbind, obs_anno_list)
 
@@ -129,7 +133,11 @@ plot_complex_heatmap <- function(infercnv_obj,
   rownames(obs_anno_df) <- obs_anno_df$CB
   obs_anno_df$CB <- NULL
 
-  obs_anno_df$sample <- str_remove(str_remove(rownames(obs_anno_df), "_[^_]*$"), "^[^_]*_")
+  obs_anno_df$Sample <- str_remove(str_remove(rownames(obs_anno_df), "_[^_]*$"), "^[^_]*_")
+
+  # Calculate the heatmaps plot heights
+  obs_plot_height = ncol(obs_expr) / ncol(expr) * 12
+  ref_plot_height = (ncol(expr) - ncol(obs_expr)) / ncol(expr) * 12
 
   # Dendrogram
   tree <- read.tree(dendrogram_file)
@@ -193,20 +201,20 @@ plot_complex_heatmap <- function(infercnv_obj,
                      labels_gp = gpar(cex = 1))
   )
 
-  if (!is.null(hist_cols)) {
-    hist_colors <- hist_cols
-  } else {
-    hist_colors <- setNames(hist_colors_default,
-                            sort(unique(obs_anno_df$histology)))
-    hist_colors <- hist_colors[!is.na((names(hist_colors)))]
-  }
-
   if (obs_groups == "histology") {
-    obs_anno_df <- obs_anno_df %>% rename(histology = class)
+    obs_anno_df <- obs_anno_df %>% rename(Histology = class)
 
-    anno_type <- c("sample", "histology")
-    anno_col <- list(sample = sample_colors,
-                     histology = hist_colors)
+    if (!is.null(hist_cols)) {
+      hist_colors <- hist_cols
+    } else {
+      hist_colors <- setNames(hist_colors_default,
+                              sort(unique(obs_anno_df$Histology)))
+      hist_colors <- hist_colors[!is.na((names(hist_colors)))]
+    }
+
+    anno_type <- c("Sample", "Histology")
+    anno_col <- list(Sample = sample_colors,
+                     Histology = hist_colors)
     anno_leg <- list(
       sample = list(
         direction = "horizontal",
@@ -215,8 +223,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         grid_width  = unit(8, "mm"),
         labels_gp   = gpar(fontsize = 16),
         title_gp    = gpar(fontsize = 16,
-                           fontface = "bold")
-      ),
+                           fontface = "bold")),
       histology = list(
         direction = "horizontal",
         nrow = 1,
@@ -224,8 +231,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         grid_width  = unit(8, "mm"),
         labels_gp   = gpar(fontsize = 16),
         title_gp    = gpar(fontsize = 16,
-                           fontface = "bold")
-      )
+                           fontface = "bold"))
     )
 
     obs_left_anno <- rowAnnotation(
@@ -237,14 +243,19 @@ plot_complex_heatmap <- function(infercnv_obj,
       annotation_legend_param = anno_leg
     )
   } else if (obs_groups == "clone") {
-    obs_anno_df <- obs_anno_df %>% rename(clone = class)
+    obs_anno_df <- obs_anno_df %>% rename(Clone = class)
 
     if (!is.null(clone_cols)) {
       clone_colors <- clone_cols
     } else {
-      clone_levels <- sort(unique(obs_anno_df$clone))
-      clone_color_indices <- round(seq(1, length(clone_colors_default), length.out = length(clone_levels)))
-      clone_colors <- setNames(clone_colors_default[clone_color_indices], clone_levels)
+      clone_levels <- sort(unique(obs_anno_df$Clone))
+      non_x_clones_levels <- clone_levels[!str_detect(clone_levels, "^X")]
+      non_x_clone_color_indices <- round(seq(1, length(clone_colors_default), length.out = length(non_x_clones_levels)))
+      non_x_clone_colors <- setNames(clone_colors_default[non_x_clone_color_indices], non_x_clones_levels)
+      x_clones_levels <- clone_levels[str_detect(clone_levels, "^X")]
+      x_clone_color_indices <- round(seq(1, length(clone_x_colors_default), length.out = length(x_clones_levels)))
+      x_clone_colors <- setNames(clone_x_colors_default[x_clone_color_indices], x_clones_levels)
+      clone_colors <- c(non_x_clone_colors, x_clone_colors)[clone_levels]
     }
 
     if (is.character(hist_annotation) && file.exists(hist_annotation)) {
@@ -263,12 +274,20 @@ plot_complex_heatmap <- function(infercnv_obj,
 
     hist_anno <- hist_anno[rownames(obs_anno_df), , drop = FALSE]
 
-    obs_anno_df$histology <- hist_anno[rownames(obs_anno_df), "Histology"]
+    obs_anno_df$Histology <- hist_anno[rownames(obs_anno_df), "Histology"]
 
-    anno_type <- c("sample", "histology", "clone")
-    anno_col <- list(sample = sample_colors,
-                     histology = hist_colors,
-                     clone = clone_colors)
+    if (!is.null(hist_cols)) {
+      hist_colors <- hist_cols
+    } else {
+      hist_colors <- setNames(hist_colors_default,
+                              sort(unique(obs_anno_df$Histology)))
+      hist_colors <- hist_colors[!is.na((names(hist_colors)))]
+    }
+
+    anno_type <- c("Sample", "Histology", "Clone")
+    anno_col <- list(Sample = sample_colors,
+                     Histology = hist_colors,
+                     Clone = clone_colors)
     anno_leg <- list(
       sample = list(
         direction = "horizontal",
@@ -329,7 +348,7 @@ plot_complex_heatmap <- function(infercnv_obj,
     row_title_side = "right",
     row_title_rot = 90,
     row_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
-    row_dend_width = unit(6, "cm"),
+    row_dend_width = unit(obs_plot_height, "cm"),
     height = unit(8, "inch"),
     use_raster = TRUE,
     raster_device = "agg_png",
@@ -422,15 +441,15 @@ plot_complex_heatmap <- function(infercnv_obj,
     rownames(ref_anno_df) <- ref_anno_df$CB
     ref_anno_df$CB <- NULL
 
-    ref_anno_df$sample <- str_remove(str_remove(rownames(ref_anno_df), "_[^_]*$"), "^[^_]*_")
+    ref_anno_df$Sample <- str_remove(str_remove(rownames(ref_anno_df), "_[^_]*$"), "^[^_]*_")
 
-    ref_anno_df$histology <- "Benign"
-    ref_anno_df$clone <- "Clone0"
+    ref_anno_df$Histology <- "Benign"
+    ref_anno_df$Clone <- "0"
 
-    ref_anno_type <- c("sample", "histology", "clone")
-    ref_anno_col <- list(sample = sample_colors,
-                         histology = hist_colors,
-                         clone = clone_colors
+    ref_anno_type <- c("Sample", "Histology", "Clone")
+    ref_anno_col <- list(Sample = sample_colors,
+                         Histology = hist_colors,
+                         Clone = clone_colors
     )
 
     ref_anno_leg <- list(
@@ -488,7 +507,7 @@ plot_complex_heatmap <- function(infercnv_obj,
       row_title_rot = 90,
       row_title_gp = gpar(fontsize = 18, fontface = "bold", lineheight = 3),
       show_heatmap_legend = FALSE,
-      height = unit(3, "inch"),
+      height = unit(ref_plot_height, "inch"),
       use_raster = TRUE,
       raster_device = "agg_png",
       raster_quality = 6,
@@ -508,7 +527,7 @@ plot_complex_heatmap <- function(infercnv_obj,
       column_title = NULL,
       border = FALSE,
       rect_gp = gpar(fill = NA, col = NA),
-      height = unit(3, "inch")
+      height = unit(ref_plot_height, "inch")
     )
   }
 
@@ -524,7 +543,7 @@ plot_complex_heatmap <- function(infercnv_obj,
          ht_gap = unit(2, "cm"),
          annotation_legend_side = "bottom"
     )
-    vp <- viewport(x = 0.01, y = 0.94, width = 0.10, height = 0.20, just = c("left", "top"))
+    vp <- viewport(x = 0.1, y = 0.9, width = 0.10, height = 0.15, just = c("left", "top"))
     pushViewport(vp)
     grid.draw(legend_plot_grob)
     popViewport()
@@ -539,7 +558,7 @@ plot_complex_heatmap <- function(infercnv_obj,
          ht_gap = unit(2, "cm"),
          annotation_legend_side = "bottom"
     )
-    vp <- viewport(x = 0.01, y = 0.94, width = 0.10, height = 0.20, just = c("left", "top"))
+    vp <- viewport(x = 0.1, y = 0.9, width = 0.10, height = 0.15, just = c("left", "top"))
     pushViewport(vp)
     grid.draw(legend_plot_grob)
     popViewport()
