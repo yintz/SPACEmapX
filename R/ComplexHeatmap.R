@@ -1,21 +1,24 @@
-# Work in progress
-# These have not yet been extensively tested and are subject to change
+# To Do List:
+# - change coloring variable names to match options
 
 #' Plot Complex Heatmap for inferCNV Output
 #'
 #' This function generates a heatmap using the ComplexHeatmap package to visualize inferCNV results,
-#' supporting reference and observation groups, histology and clone annotations, and user-defined color schemes.
+#' supporting reference and observation groups, one additional annotation, and user-defined color schemes.
+#'
+#' Barcodes needs to be formatted in the following way: pt03_AP1_CAATGGATACGCTCGA.1 patient_section_10xBarcodeID.1 with Patient ID being 4 characters long.
 #'
 #' @param infercnv_obj An inferCNV object created by the `infercnv::create_infercnv_object` and processed by `run()` or `run_infercnv()`.
 #' @param output_dir Directory where the output heatmap PDF will be saved.
 #' @param heatmap_thresholds_file Path to the inferCNV-generated `heatmap_thresholds.txt` file.
 #' @param dendrogram_file A Newick file for dendrogram, can be either a single tree (`phylo`) or multiple trees (`multiPhylo`).
-#' @param obs_groups Character string indicating how observations are grouped: `"histology"` (default) or `"clone"`.
-#' @param hist_annotation A data frame or path to a TSV file with histology information (must include a `"Histology"` column). Required if obs_groups = “clone”.
+#' @param obs_class Character string indicating how observations are grouped. Example `"Clone"`, `"Histology"`.
+#' @param annotation_name Character string indicating what additional annotation is desired. Example `"Histology"`.
+#' @param annotation_df A data frame or path to a TSV file with additional annotation information (annotation should be in the first column). Required if annotation_type is used.
 #' @param output_format File format for the saved heatmap: `"png"` (default) or `"pdf"`.
 #' @param output_name File name for the saved heatmap. Default is `"complex_heatmap.png"`.
-#' @param hist_cols Optional. Named list or vector of colors for histology groups. Format: `c("group1" = "#hex", ...)`.
-#' @param clone_cols Optional. Named list or vector of colors for clone groups. Format: `c("clone1" = "#hex", ...)`.
+#' @param class_cols Optional. Named list or vector of colors for classes groups within object. Format: `c("A" = "#hex", ...)`.
+#' @param anno_cols Optional. Named list or vector of colors for additional annotation groups. Format: `c("A" = "#hex", ...)`.
 #'
 #' @return A PDF file is saved to `output_dir`, visualizing CNV patterns across references and observations with dendrograms and annotations.
 #'
@@ -31,22 +34,24 @@
 #'   output_dir = "results/",
 #'   heatmap_thresholds_file = "results/infercnv.heatmap_thresholds.txt",
 #'   dendrogram_file = "results/infercnv.observations_dendrogram.txt",
-#'   obs_groups = "clone",
-#'   hist_annotation = "metadata/histologies.tsv",
-#'   hist_cols = c("Tumor" = "#FF0000", "Normal" = "#0000FF"),
-#'   clone_cols = c("Clone1" = "#E41A1C", "Clone2" = "#377EB8")
+#'   obs_class = "clone",
+#'   annotation_name = "histology",
+#'   annotation_df = "metadata/histologies.tsv",
+#'   class_cols = c("A" = "#FF0000", "B" = "#0000FF"),
+#'   anno_cols = c("A" = "#E41A1C", "B" = "#377EB8")
 #' )
 
 plot_complex_heatmap <- function(infercnv_obj,
                                  output_dir,
                                  heatmap_thresholds_file,
                                  dendrogram_file,
-                                 obs_groups = "histology",
-                                 hist_annotation,
+                                 obs_class = "class",
+                                 annotation_name = NULL,
+                                 annotation_df = NULL,
                                  output_format = "png",
                                  output_name = "complex_heatmap.png",
-                                 hist_cols = NULL,
-                                 clone_cols = NULL) {
+                                 class_cols = NULL,
+                                 anno_cols = NULL) {
 
   library(ComplexHeatmap)
   library(tidyverse)
@@ -58,8 +63,8 @@ plot_complex_heatmap <- function(infercnv_obj,
   library(ggplot2)
   library(dendextend)
 
-  if (!obs_groups %in% c("histology", "clone")) {
-    stop("`obs_groups` must be either 'histology' or 'clone'.")
+  if (!is.null(annotation_name) && is.null(annotation_df)) {
+    stop("`annotation_df` must be supplied if `annotation_name` is used")
   }
 
   if (!output_format %in% c("png", "pdf")) {
@@ -114,9 +119,12 @@ plot_complex_heatmap <- function(infercnv_obj,
   # Annotations - Observations
   obs_loc <- infercnv_obj@observation_grouped_cell_indices
   names(obs_loc) <- make.names(names(obs_loc))
-  list2env(obs_loc, envir = environment())
 
-  display_name_map_obs <- names(pt03_infCNV_out@observation_grouped_cell_indices)
+  suppressWarnings({
+    list2env(obs_loc, envir = environment())
+  })
+
+  display_name_map_obs <- names(infercnv_obj@observation_grouped_cell_indices)
   names(display_name_map_obs) <- names(obs_loc)
 
   obs_anno_list <- list()
@@ -133,7 +141,7 @@ plot_complex_heatmap <- function(infercnv_obj,
   rownames(obs_anno_df) <- obs_anno_df$CB
   obs_anno_df$CB <- NULL
 
-  obs_anno_df$Sample <- str_remove(str_remove(rownames(obs_anno_df), "_[^_]*$"), "^[^_]*_")
+  obs_anno_df$Section <- str_remove(str_remove(rownames(obs_anno_df), "_[^_]*$"), "^[^_]*_")
 
   # Calculate the heatmaps plot heights
   obs_plot_height = ncol(obs_expr) / ncol(expr) * 12
@@ -201,22 +209,22 @@ plot_complex_heatmap <- function(infercnv_obj,
                      labels_gp = gpar(cex = 1))
   )
 
-  if (obs_groups == "histology") {
-    obs_anno_df <- obs_anno_df %>% rename(Histology = class)
+  if (is.null(annotation_name)) {
+    obs_anno_df <- obs_anno_df %>% rename({{obs_class}} := class)
 
-    if (!is.null(hist_cols)) {
-      hist_colors <- hist_cols
+    if (!is.null(class_cols)) {
+      hist_colors <- class_cols
     } else {
       hist_colors <- setNames(hist_colors_default,
-                              sort(unique(obs_anno_df$Histology)))
+                              sort(unique(obs_anno_df[[obs_class]])))
       hist_colors <- hist_colors[!is.na((names(hist_colors)))]
     }
 
-    anno_type <- c("Sample", "Histology")
-    anno_col <- list(Sample = sample_colors,
-                     Histology = hist_colors)
+    anno_type <- c("Section", obs_class)
+    anno_col <- list(sample_colors, hist_colors)
+    names(anno_col) <- anno_type
     anno_leg <- list(
-      sample = list(
+      list(
         direction = "horizontal",
         nrow = 1,
         grid_height = unit(8, "mm"),
@@ -224,7 +232,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         labels_gp   = gpar(fontsize = 16),
         title_gp    = gpar(fontsize = 16,
                            fontface = "bold")),
-      histology = list(
+      list(
         direction = "horizontal",
         nrow = 1,
         grid_height = unit(8, "mm"),
@@ -233,6 +241,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         title_gp    = gpar(fontsize = 16,
                            fontface = "bold"))
     )
+    names(anno_leg) <- anno_type
 
     obs_left_anno <- rowAnnotation(
       df = obs_anno_df[, anno_type],
@@ -242,13 +251,13 @@ plot_complex_heatmap <- function(infercnv_obj,
       gap = unit(3, "mm"),
       annotation_legend_param = anno_leg
     )
-  } else if (obs_groups == "clone") {
-    obs_anno_df <- obs_anno_df %>% rename(Clone = class)
+  } else {
+    obs_anno_df <- obs_anno_df %>% rename({{obs_class}} := class)
 
-    if (!is.null(clone_cols)) {
-      clone_colors <- clone_cols
+    if (!is.null(class_cols)) {
+      clone_colors <- class_cols
     } else {
-      clone_levels <- sort(unique(obs_anno_df$Clone))
+      clone_levels <- sort(unique(obs_anno_df[[obs_class]]))
       non_x_clones_levels <- clone_levels[!str_detect(clone_levels, "^X")]
       non_x_clone_color_indices <- round(seq(1, length(clone_colors_default), length.out = length(non_x_clones_levels)))
       non_x_clone_colors <- setNames(clone_colors_default[non_x_clone_color_indices], non_x_clones_levels)
@@ -258,38 +267,37 @@ plot_complex_heatmap <- function(infercnv_obj,
       clone_colors <- c(non_x_clone_colors, x_clone_colors)[clone_levels]
     }
 
-    if (is.character(hist_annotation) && file.exists(hist_annotation)) {
-      hist_anno <- read.table(hist_annotation, row.names = 1, sep = "\t", stringsAsFactors = FALSE, col.names = "Histology")
-    } else if (is.data.frame(hist_annotation)) {
-      hist_anno <- hist_annotation
-      if (!"Histology" %in% colnames(hist_anno)) {
-        stop("hist_annotation data frame must contain a column named 'Histology'")
+    if (is.character(annotation_df) && file.exists(annotation_df)) {
+      hist_anno <- read.table(annotation_df, header = FALSE, row.names = 1, sep = "\t", stringsAsFactors = FALSE, col.names = c("Spot_ID_temp", annotation_name))
+    } else if (is.data.frame(annotation_df)) {
+      hist_anno <- annotation_df
+      if (!annotation_name %in% colnames(hist_anno)) {
+        stop("annotation_df data frame must contain a column named the same as 'annotation_name'")
       }
     } else {
-      stop("`hist_annotation` must be either a file path to a .tsv or a data frame.")
+      stop("`annotation_df` must be either a file path to a .tsv or a data frame.")
     }
     if (!all(rownames(obs_anno_df) %in% rownames(hist_anno))) {
-      stop("hist_annotation data frame rownames must contain all obs_anno_df rownames")
+      stop("annotation_df data frame rownames must contain all inferCNV object observation rownames")
     }
 
     hist_anno <- hist_anno[rownames(obs_anno_df), , drop = FALSE]
 
-    obs_anno_df$Histology <- hist_anno[rownames(obs_anno_df), "Histology"]
+    obs_anno_df[[annotation_name]] <- hist_anno[rownames(obs_anno_df), annotation_name]
 
-    if (!is.null(hist_cols)) {
-      hist_colors <- hist_cols
+    if (!is.null(anno_cols)) {
+      hist_colors <- anno_cols
     } else {
       hist_colors <- setNames(hist_colors_default,
-                              sort(unique(obs_anno_df$Histology)))
+                              sort(unique(obs_anno_df[[annotation_name]])))
       hist_colors <- hist_colors[!is.na((names(hist_colors)))]
     }
 
-    anno_type <- c("Sample", "Histology", "Clone")
-    anno_col <- list(Sample = sample_colors,
-                     Histology = hist_colors,
-                     Clone = clone_colors)
+    anno_type <- c("Section", annotation_name, obs_class)
+    anno_col <- list(sample_colors, hist_colors, clone_colors)
+    names(anno_col) <- anno_type
     anno_leg <- list(
-      sample = list(
+      list(
         direction = "horizontal",
         nrow = 1,
         grid_height = unit(8, "mm"),
@@ -297,7 +305,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         labels_gp   = gpar(fontsize = 16),
         title_gp    = gpar(fontsize = 16,
                            fontface = "bold")),
-      clone = list(
+      list(
         direction = "horizontal",
         nrow = 1,
         grid_height = unit(8, "mm"),
@@ -305,7 +313,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         labels_gp   = gpar(fontsize = 16),
         title_gp    = gpar(fontsize = 16,
                            fontface = "bold")),
-      histology = list(
+      list(
         direction = "horizontal",
         nrow = 1,
         grid_height = unit(8, "mm"),
@@ -314,6 +322,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         title_gp    = gpar(fontsize = 16,
                            fontface = "bold"))
     )
+    names(anno_leg) <- anno_type
 
     obs_left_anno <- rowAnnotation(
       df = obs_anno_df[, anno_type],
@@ -424,7 +433,10 @@ plot_complex_heatmap <- function(infercnv_obj,
     ref_loc <- infercnv_obj@reference_grouped_cell_indices
 
     names(ref_loc) <- make.names(names(ref_loc))
-    list2env(ref_loc, envir = environment())
+
+    suppressWarnings({
+      list2env(ref_loc, envir = environment())
+    })
 
     ref_anno_list <- list()
     for (annotation in names(ref_loc)) {
@@ -441,19 +453,19 @@ plot_complex_heatmap <- function(infercnv_obj,
     rownames(ref_anno_df) <- ref_anno_df$CB
     ref_anno_df$CB <- NULL
 
-    ref_anno_df$Sample <- str_remove(str_remove(rownames(ref_anno_df), "_[^_]*$"), "^[^_]*_")
+    ref_anno_df$Section <- str_remove(str_remove(rownames(ref_anno_df), "_[^_]*$"), "^[^_]*_")
 
     ref_anno_df$Histology <- "Benign"
     ref_anno_df$Clone <- "0"
 
-    ref_anno_type <- c("Sample", "Histology", "Clone")
-    ref_anno_col <- list(Sample = sample_colors,
+    ref_anno_type <- c("Section", "Histology", "Clone")
+    ref_anno_col <- list(Section = sample_colors,
                          Histology = hist_colors,
                          Clone = clone_colors
     )
 
     ref_anno_leg <- list(
-      sample = list(
+      Section = list(
         direction = "horizontal",
         nrow = 1,
         grid_height = unit(8, "mm"),
@@ -461,7 +473,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         labels_gp   = gpar(fontsize = 16),
         title_gp    = gpar(fontsize = 16,
                            fontface = "bold")),
-      histology = list(
+      Histology = list(
         direction = "horizontal",
         nrow = 1,
         grid_height = unit(8, "mm"),
@@ -469,7 +481,7 @@ plot_complex_heatmap <- function(infercnv_obj,
         labels_gp   = gpar(fontsize = 16),
         title_gp    = gpar(fontsize = 16,
                            fontface = "bold")),
-      clone = list(
+      Clone = list(
         direction = "horizontal",
         nrow = 1,
         grid_height = unit(8, "mm"),
@@ -534,7 +546,7 @@ plot_complex_heatmap <- function(infercnv_obj,
   ht_list <- ref_ht %v% obs_ht
 
   if (output_format == "png") {
-    png(file.path(output_dir, output_name), width = 20, height = 16, units = "in", res = 300)
+    png(file.path(output_dir, output_name), width = 20, height = 15, units = "in", res = 300)
     draw(ht_list,
          padding = unit(c(1, 1, 2, 1), "cm"),
          column_title = "Genomic Region",
@@ -543,13 +555,13 @@ plot_complex_heatmap <- function(infercnv_obj,
          ht_gap = unit(2, "cm"),
          annotation_legend_side = "bottom"
     )
-    vp <- viewport(x = 0.1, y = 0.9, width = 0.10, height = 0.15, just = c("left", "top"))
+    vp <- viewport(x = 0.05, y = 0.95, width = 0.10, height = 0.15, just = c("left", "top"))
     pushViewport(vp)
     grid.draw(legend_plot_grob)
     popViewport()
     dev.off()
   } else if (output_format == "pdf") {
-    pdf(file.path(output_dir, output_name), width = 20, height = 16)
+    pdf(file.path(output_dir, output_name), width = 20, height = 15)
     draw(ht_list,
          padding = unit(c(1, 1, 2, 1), "cm"),
          column_title = "Genomic Region",
@@ -558,7 +570,7 @@ plot_complex_heatmap <- function(infercnv_obj,
          ht_gap = unit(2, "cm"),
          annotation_legend_side = "bottom"
     )
-    vp <- viewport(x = 0.1, y = 0.9, width = 0.10, height = 0.15, just = c("left", "top"))
+    vp <- viewport(x = 0.05, y = 0.95, width = 0.10, height = 0.15, just = c("left", "top"))
     pushViewport(vp)
     grid.draw(legend_plot_grob)
     popViewport()
